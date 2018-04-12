@@ -1,0 +1,35 @@
+import os
+
+from setuptools import find_packages, setup
+
+__dir = os.path.abspath(os.path.dirname(__file__))
+with open(os.path.join(__dir, 'README.md'), encoding='utf-8') as f:
+    long_description = '\n' + f.read()
+about = {}
+with open(os.path.join(__dir, 'kien', '__version__.py')) as f:
+    exec(f.read(), about)
+
+
+setup(
+    name='kien',
+    version=about['__version__'],
+    description='',
+    long_description=long_description,
+    author='Konrad Mohrfeldt',
+    author_email='mohrfeldt@silicann.com',
+    url='https://github.com/silicann/kien',
+    packages=find_packages(),
+    install_requires=[
+        'blessings',
+        'blinker'
+    ],
+    extras_require={},
+    include_package_data=True,
+    license='GPLv3+',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 3',
+    ]
+)
