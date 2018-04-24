@@ -1,5 +1,7 @@
-import re
+import collections
 import itertools
+import re
+
 from .validation import validate_value, one_of
 
 TRUE_CHOICES = ('true', '1', 'on', 'yes', 'enable')
@@ -23,11 +25,18 @@ def transform(**fields):
 
 
 def transform_value(transformator, value):
-    if getattr(transformator, '__is_transformator', False):
-        # syntactic sugar for uses of uninstantiated transformers
-        transformator = transformator()
-    transformed_value = getattr(transformator, 'transform', transformator)(value)
-    return transformed_value
+    if isinstance(transformator, collections.Iterable):
+        transformators = transformator
+    else:
+        transformators = [transformator]
+
+    for transformator in transformators:
+        if getattr(transformator, '__is_transformator', False):
+            # syntactic sugar for uses of uninstantiated transformers
+            transformator = transformator()
+        value = getattr(transformator, 'transform', transformator)(value)
+
+    return value
 
 
 class Transformable:
