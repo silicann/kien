@@ -4,7 +4,7 @@ import os
 from textwrap import wrap, indent
 from ..commands import create_commander, var, CommandResult, filter_root_commands, \
     filter_public_commands
-from ..transformation import flatten
+from ..transformation import flatten, unique
 from ..utils import strip_tags, read_object_path
 from ..utils import join_generator_string, TaggedString
 
@@ -93,7 +93,7 @@ def help():
 
 @command(var('command', is_optional=True), parent=help)
 @command.inject(commands='__commands[]')
-@command.transform(commands=flatten)
+@command.transform(commands=[flatten, unique])
 def help_command(commands, command=None):
     root_commands = filter_root_commands(commands)
     command_map = OrderedDict(
@@ -109,7 +109,7 @@ def help_command(commands, command=None):
 
 
 @command.inject(commands='__commands[]')
-@command.transform(commands=flatten)
+@command.transform(commands=[flatten, unique])
 def find_root_commands(commands):
     root_commands = filter_root_commands(commands)
     command_map = OrderedDict(
