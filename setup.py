@@ -13,7 +13,7 @@ with open(os.path.join(__dir, 'kien', '__version__.py')) as f:
 setup(
     name='kien',
     version=about['__version__'],
-    description='',
+    description='kien is a line-based command parser for creating shell-like interfaces',
     long_description=long_description,
     author='Konrad Mohrfeldt',
     author_email='mohrfeldt@silicann.com',
