@@ -99,3 +99,14 @@ def flatten(value):
     # cause confusion because once the variable content
     # has been accessed the content is gone
     return list(itertools.chain(*value))
+
+
+@simple_transformator
+def unique(value):
+    # we don’t use a set here, because we want to preserve
+    # the item order inside the iterable
+    result = []
+    for item in value:
+        if item not in result:
+            result.append(item)
+    return result
