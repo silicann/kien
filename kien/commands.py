@@ -465,13 +465,13 @@ def create_commander(name, description=None):
         @staticmethod
         @tokenize_args
         def dispatch(args, simulate=False) -> Iterator[CommandResult]:
-            commands = _resolve_commands(args)
+            resolved_commands = _resolve_commands(args)
 
             if simulate:
-                yield CommandResult(message=commands.describe(args))
-            elif commands.exact_match:
+                yield CommandResult(message=resolved_commands.describe(args))
+            elif resolved_commands.exact_match:
                 try:
-                    yield from commands.exact_match.command(args, require=_require)
+                    yield from resolved_commands.exact_match.command(args, require=_require)
                 except ValidationError as exc:
                     yield CommandResult(
                         False,
@@ -479,7 +479,7 @@ def create_commander(name, description=None):
                             ' for field ' + str(exc.field) if exc.field else '', str(exc))
                     )
             else:
-                yield CommandResult(False, commands.suggestion(_resolve_commands, args))
+                yield CommandResult(False, resolved_commands.suggestion(_resolve_commands, args))
 
         @classmethod
         def fire(cls, args):
