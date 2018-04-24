@@ -19,15 +19,13 @@ def render_description(cmd, prefix=' - ', long_prefix='  - ',
     _indent = '\t' + ' ' * len(long_prefix)
     choice_vars = [token for token in cmd.tokens if token.name and token.choices]
 
-    if not doc:
-        return ''
-
-    if len(doc) > wrap_width:
-        lines = indent(os.linesep.join(wrap(doc, text_width)), _indent).split(os.linesep)
-        lines[0] = lines[0].replace(_indent, '\t' + long_prefix)
-        doc = os.linesep + os.linesep.join(lines)
-    else:
-        doc = prefix + doc
+    if doc:
+        if len(doc) > wrap_width:
+            lines = indent(os.linesep.join(wrap(doc, text_width)), _indent).split(os.linesep)
+            lines[0] = lines[0].replace(_indent, '\t' + long_prefix)
+            doc = os.linesep + os.linesep.join(lines)
+        else:
+            doc = prefix + doc
     if choice_vars:
         for token in choice_vars:
             doc += os.linesep + _indent
@@ -36,7 +34,7 @@ def render_description(cmd, prefix=' - ', long_prefix='  - ',
                 ', '.join(map(str, token.choices))
             )
 
-    return TaggedString.help(doc)
+    return TaggedString.help(doc) if doc else ''
 
 
 @join_generator_string()
