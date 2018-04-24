@@ -447,12 +447,11 @@ def create_commander(name, description=None):
                 context.pop(self.key)
 
     class Commander:
-        """%s""" % (description or '')
-
         provide = _provide
 
         def __init__(self, name):
             self.name = name
+            self.__doc__ = """%s""" % (description or '')
             self.__class__.__name__ = name
 
         @staticmethod
@@ -487,21 +486,6 @@ def create_commander(name, description=None):
             return list(cls.dispatch(args))
 
         @staticmethod
-        def __call__(*tokens, parent=None, is_abstract=False, group=None, inject=None,
-                     is_disabled=False) -> Callable:
-            tokens = _normalize_tokens(tokens)
-            injections = _normalize_injections(inject)
-
-            def decorator(fn):
-                fn_command = _Command(fn, tokens, parent, is_abstract,
-                                      group, injections, is_disabled)
-                fn_command.__name__ = fn.__name__
-                fn_command.__doc__ = fn.__doc__
-                commands.append(fn_command)
-                return fn_command
-            return decorator
-
-        @staticmethod
         def inject(**requires) -> Callable:
             requires = _normalize_injections(requires)
 
@@ -513,6 +497,21 @@ def create_commander(name, description=None):
                 inner.__name__ = fn.__name__
                 inner.__doc__ = fn.__doc__
                 return inner
+            return decorator
+
+        def __call__(self, *tokens, parent=None, is_abstract=False, group=None, inject=None,
+                     is_disabled=False) -> Callable:
+            tokens = _normalize_tokens(tokens)
+            injections = _normalize_injections(inject)
+
+            def decorator(fn):
+                fn_command = _Command(fn, tokens, parent, is_abstract,
+                                      group, injections, is_disabled)
+                fn_command.__name__ = fn.__name__
+                fn_command.__doc__ = fn.__doc__
+                fn_command.__commander__ = self
+                commands.append(fn_command)
+                return fn_command
             return decorator
 
         def compose(self, *commanders) -> 'Commander':

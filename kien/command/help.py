@@ -51,8 +51,8 @@ def describe_command_list(commands: dict):
 @command.inject(terminal='terminal')
 def describe_command(terminal, all_commands, root):
     yield TaggedString.header('%s command' % str(root))
-    if root.__doc__:
-        yield root.__doc__.strip()
+    if root.__commander__.__doc__:
+        yield TaggedString.help(indent(root.__commander__.__doc__.strip(), '  '))
     yield ''
     yield TaggedString.label('Supported Commands')
     public_commands = filter_public_commands(all_commands)
