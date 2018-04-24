@@ -31,7 +31,7 @@ def render_description(cmd, prefix=' - ', long_prefix='  - ',
             doc += os.linesep + _indent
             doc += '{}: (choices: {})'.format(
                 strip_tags(str(token)),
-                ', '.join(map(str, token.choices))
+                ', '.join(sorted(map(str, token.choices)))
             )
 
     return TaggedString.help(doc) if doc else ''
