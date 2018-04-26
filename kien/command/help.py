@@ -1,38 +1,60 @@
+import os
+import re
 from collections import OrderedDict
 from itertools import groupby
-import os
 from textwrap import wrap, indent
+
 from ..commands import create_commander, var, CommandResult, filter_root_commands, \
     filter_public_commands
 from ..transformation import flatten, unique
-from ..utils import strip_tags, read_object_path
 from ..utils import join_generator_string, TaggedString
+from ..utils import strip_tags, read_object_path
 
 WRAP_WIDTH = 80
 
 command = create_commander('help', description='List and describe all available commands.')
 
 
-def render_description(cmd, prefix=' - ', long_prefix='  - ',
-                       wrap_width=WRAP_WIDTH, text_width=WRAP_WIDTH):
-    doc = cmd.__doc__.strip() if cmd.__doc__ else ''
+def _indent_no_first():
+    first = [True]
+
+    def callback(line):
+        if not line.strip():
+            return False
+        if first[0]:
+            first[0] = False
+            return False
+        else:
+            return True
+    return callback
+
+
+def render_description(cmd, long_prefix='  - ',  text_width=WRAP_WIDTH):
+    doc = re.sub(r'[ ]{2,}', '', cmd.__doc__.strip() if cmd.__doc__ else '')
     _indent = '\t' + ' ' * len(long_prefix)
-    choice_vars = [token for token in cmd.tokens if token.name and token.choices]
 
     if doc:
-        if len(doc) > wrap_width:
-            lines = indent(os.linesep.join(wrap(doc, text_width)), _indent).split(os.linesep)
-            lines[0] = lines[0].replace(_indent, '\t' + long_prefix)
-            doc = os.linesep + os.linesep.join(lines)
-        else:
-            doc = prefix + doc
-    if choice_vars:
-        for token in choice_vars:
-            doc += os.linesep + _indent
-            doc += '{}: (choices: {})'.format(
-                strip_tags(str(token)),
-                ', '.join(sorted(map(str, token.choices)))
-            )
+        lines = indent(os.linesep.join(wrap(doc, text_width)), _indent).split(os.linesep)
+        lines[0] = lines[0].replace(_indent, '\t' + long_prefix)
+        doc = os.linesep + os.linesep.join(lines)
+    for token in cmd.tokens:
+        if not token.name:
+            continue
+        if not token.description and not token.choices:
+            continue
+        token_name = strip_tags(str(token)) + ': '
+        token_doc = os.linesep + _indent + token_name
+        token_indent = _indent + ' ' * len(token_name)
+
+        if token.description:
+            description = os.linesep.join(wrap(token.description, text_width - len(token_indent)))
+            token_description = indent(description, token_indent, _indent_no_first())
+            token_doc += token_description
+        if token.choices:
+            if token.description:
+                token_doc += os.linesep + token_indent
+            token_doc += 'Choices: %s' % ', '.join(sorted(map(str, token.choices)))
+        doc += token_doc
 
     return TaggedString.help(doc) if doc else ''
 
@@ -65,13 +87,12 @@ def describe_command(terminal, all_commands, root):
         if group is not None:
             yield '\t%s:' % TaggedString.label(group.name)
             if group.description:
-                yield TaggedString.help(indent(os.linesep.join(wrap(group.description)), '\t\t'))
+                yield TaggedString.help(indent(os.linesep.join(wrap(group.description)), '\t  '))
         for cmd in group_commands:
             cmd_str = str(cmd)
             term_width = read_object_path(terminal, 'width', default=None)
-            wrap_width = term_width - len(cmd_str) - 10 if term_width else WRAP_WIDTH
             text_width = min(term_width, WRAP_WIDTH) if term_width else WRAP_WIDTH
-            doc = render_description(cmd, wrap_width=wrap_width, text_width=text_width)
+            doc = render_description(cmd, text_width=text_width)
             yield '\t%s%s' % (cmd_str, doc)
 
 
