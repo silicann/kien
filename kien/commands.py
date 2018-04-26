@@ -35,7 +35,7 @@ def _is_enum(choices):
 
 class _Token:
     def __init__(self, value=_Undefined, name=None, is_optional=False,
-                 greedy=False, transform=None, choices=None):
+                 greedy=False, transform=None, choices=None, description=None):
         """ specify possible value of a command string token
 
         @param choices: may be None, an enum or an iterable
@@ -46,6 +46,7 @@ class _Token:
         self.is_optional = is_optional
         self.greedy = greedy
         self.transform = transform
+        self.description = description
         if choices is None:
             self.choices = set()
         elif _is_enum(choices):
@@ -108,8 +109,8 @@ class _Group:
 
 
 def var(name, value=_Undefined, is_optional=False, transform=None, greedy=None,
-        choices=None):
-    return _Token(value, name, is_optional, greedy, transform, choices)
+        choices=None, description=None):
+    return _Token(value, name, is_optional, greedy, transform, choices, description)
 
 
 def optional(value):
