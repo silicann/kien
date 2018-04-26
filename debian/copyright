@@ -1,0 +1,6 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: python-kien
+
+Files: *
+Copyright: 2018 Silicann Systems GmbH
+License: GPLv3+
