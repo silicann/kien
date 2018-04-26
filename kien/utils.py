@@ -1,6 +1,9 @@
 from collections import namedtuple, Iterable, UserString
 import importlib
 import os
+import inspect
+import time
+import math
 import re
 import shlex
 from typing import Sequence
@@ -80,6 +83,48 @@ def columns(separator='\t', join_char=None):
         inner.__doc__ = fn.__doc__
         return inner
     return decorator
+
+
+class _Stop(Exception):
+    pass
+
+
+def throttle(frequency=None, limit=None):
+    """
+    throttle the frequency and limit the maximum number of calls of a function
+    :param frequency: frequency of calls in hertz, defaults to infinity
+    :param limit: total number of calls, defaults to infinity, must be > 0
+    :raises _Stop: if limit has been reached
+    :return: callable
+    """
+    frequency = math.inf if frequency is None else frequency
+    calls_per_second = 1 / frequency
+    # because variable scopes in python are pretty much useless for closures
+    # we’re using single-element lists here
+    last_call = [None]
+    call_count = [0]
+
+    def wrapper(fn):
+        def inner_wrapper(*args, **kwargs):
+            current_time = time.time()
+            if last_call[0] is None or last_call[0] + calls_per_second < current_time:
+                last_call[0] = current_time
+                call_count[0] += 1
+                result = fn(*args, **kwargs)
+                if inspect.isgeneratorfunction(result):
+                    yield from result
+                else:
+                    yield result
+
+            if call_count[0] == limit:
+                raise throttle.Stop()
+        inner_wrapper.__name__ = fn.__name__
+        inner_wrapper.__doc__ = fn.__doc__
+        return inner_wrapper
+    return wrapper
+
+
+throttle.Stop = _Stop
 
 
 def enum_value_list(enum):
