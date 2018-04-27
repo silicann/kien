@@ -1,3 +1,9 @@
+python-kien (0.2.0-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Konrad Mohrfeldt <mohrfeldt@silicann.com>  Fri, 27 Apr 2018 16:35:55 +0200
+
 python-kien (0.1-1) unstable; urgency=low
 
   * Initial release
