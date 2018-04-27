@@ -18,7 +18,7 @@ setup(
     author='Konrad Mohrfeldt',
     author_email='mohrfeldt@silicann.com',
     url='https://github.com/silicann/kien',
-    packages=find_packages(),
+    packages=find_packages(exclude=('examples', )),
     install_requires=[
         'blessings',
         'blinker'
