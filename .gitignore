@@ -1,4 +1,12 @@
 __pycache__
+.pybuild/
+debian/debhelper-*-stamp
+debian/files
+debian/tmp/
+debian/*.debhelper.log
+debian/*.debhelper
+debian/*.substvars
+debian/python3-kien/
 build/
 .tox/
 kien.egg-info/
