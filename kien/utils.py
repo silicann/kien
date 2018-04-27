@@ -111,7 +111,7 @@ def throttle(frequency=None, limit=None):
                 last_call[0] = current_time
                 call_count[0] += 1
                 result = fn(*args, **kwargs)
-                if inspect.isgeneratorfunction(result):
+                if inspect.isgenerator(result):
                     yield from result
                 else:
                     yield result
