@@ -15,6 +15,7 @@ setup(
     version=about['__version__'],
     description='kien is a line-based command parser for creating shell-like interfaces',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     author='Konrad Mohrfeldt',
     author_email='mohrfeldt@silicann.com',
     url='https://github.com/silicann/kien',

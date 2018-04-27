@@ -8,5 +8,6 @@ debian/*.debhelper
 debian/*.substvars
 debian/python3-kien/
 build/
+dist/
 .tox/
 kien.egg-info/

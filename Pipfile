@@ -7,5 +7,7 @@ name = "pypi"
 blessings = "*"
 blinker = "*"
 
+[dev-packages]
+
 [scripts]
 example = "sh examples/.executor.sh"
