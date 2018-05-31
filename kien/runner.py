@@ -1,4 +1,5 @@
 import argparse
+import readline
 import sys
 from typing import Sequence
 from .console import Console
@@ -23,6 +24,8 @@ class ConsoleRunner:
                             help='Disable terminal styling (colors).')
         parser.add_argument('--autoload', dest='modules', action='append',
                             help='autoload a module for the interpreter')
+        parser.add_argument('--history', default=None,
+                            help='Read history from and write it to the specified file')
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--simulate', dest='simulate', action='store_true',
@@ -48,11 +51,15 @@ class ConsoleRunner:
             self.commander.provide('terminal', console.terminal)
             if self.cli_args.modules:
                 autoload(self.commander, self.cli_args.modules)
+            if self.cli_args.history is not None:
+                readline.read_history_file(self.cli_args.history)
 
             while True:
                 try:
                     if not self._process_line(console, self.commander,
                                               ignore_end_of_file=self.cli_args.ignore_eof):
+                        if self.cli_args.history is not None:
+                            readline.write_history_file(self.cli_args.history)
                         break
                 except KeyboardInterrupt:
                     # slow / long operations (or repetitions) may be interrupted (without quitting)
