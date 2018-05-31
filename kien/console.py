@@ -78,10 +78,10 @@ class Console:
 
     def send_error(self, text):
         if self._output_format is OutputFormat.HUMAN:
-            formatted = "Error: {}".format(text)
+            formatted = 'Error: {}'.format(text)
         elif self._output_format is OutputFormat.JSON:
-            # TODO: add "error_code"
-            formatted = json.dumps({"error_message": str(text)})
+            # TODO: add 'error_code'
+            formatted = json.dumps({'error_message': str(text)})
         else:
             raise NotImplementedError('Unknown output format selected: {}'
                                       .format(self._output_format))
@@ -92,7 +92,7 @@ class Console:
         if self._output_format is OutputFormat.HUMAN:
             formatted = self._format_output(command_result.message)
         elif self._output_format is OutputFormat.JSON:
-            # TODO: add "error_code"
+            # TODO: add 'error_code'
             formatted = json.dumps({'result': command_result.data})
         else:
             raise NotImplementedError('Unknown output format selected: {}'
