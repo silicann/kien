@@ -98,7 +98,7 @@ class Console:
             raise NotImplementedError('Unknown output format selected: {}'
                                       .format(self._output_format))
         self._last_status = 0 if command_result.success else 1
-        print(formatted, file=self.output, end=self.linesep)
+        print(formatted, file=self.output, end='\0' + self.linesep)
 
     def get_prompt(self):
         if (self._output_format == OutputFormat.HUMAN) and self._show_echo:
