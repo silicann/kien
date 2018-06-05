@@ -49,6 +49,7 @@ class ConsoleRunner:
                 raise RuntimeError('You must configure a commander before starting run')
             self.commander.provide('console', console)
             self.commander.provide('terminal', console.terminal)
+            self.console = console
             if self.cli_args.modules:
                 autoload(self.commander, self.cli_args.modules)
             if self.cli_args.history is not None:
