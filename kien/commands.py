@@ -34,6 +34,9 @@ def _is_enum(choices):
 
 
 class _Token:
+    is_variable = False
+    is_placeholder = False
+
     def __init__(self, value=_Undefined, name=None, is_optional=False,
                  greedy=False, transform=None, choices=None, description=None):
         """ specify possible value of a command string token
@@ -99,7 +102,11 @@ class _Token:
 
 
 class _Placeholder(_Token):
-    pass
+    is_placeholder = True
+
+
+class _Variable(_Token):
+    is_variable = True
 
 
 class _Group:
@@ -110,7 +117,7 @@ class _Group:
 
 def var(name, value=_Undefined, is_optional=False, transform=None, greedy=None,
         choices=None, description=None):
-    return _Token(value, name, is_optional, greedy, transform, choices, description)
+    return _Variable(value, name, is_optional, greedy, transform, choices, description)
 
 
 def optional(value):
@@ -225,13 +232,20 @@ class _CommandMatches:
     def suggestion(self, resolve, args) -> str:
         @join_generator_string()
         def _render() -> str:
-            yield 'Could not find the command for "%s"' % ' '.join(args)
             matches = self.find_suggestable_matches(resolve, args)
-
-            if matches:
-                yield 'Did you mean one of:'
-                for match in matches:
-                    yield '\t%s' % match.command.get_label()
+            if len(matches) == 1 and matches[0].token_mismatches:
+                for mismatch in matches[0].token_mismatches:
+                    yield '{name}: {message}'.format(
+                        name=mismatch.token.get_label(), message=str(mismatch.exception))
+            else:
+                yield 'Could not find the command for "%s"' % ' '.join(args)
+                if matches:
+                    if len(matches) == 1:
+                        yield 'Did you mean:'
+                    else:
+                        yield 'Did you mean one of:'
+                    for match in matches:
+                        yield '\t%s' % match.command.get_label()
         return _render()
 
     @property
@@ -298,7 +312,10 @@ class _Command:
                 # if the token matching raises a ValidationError
                 # this command might still be valid, but a variable
                 # was provided in an incorrect format
-                invalid_tokens.append(TokenMismatch(token, exc, arg))
+                if token.is_variable:
+                    invalid_tokens.append(TokenMismatch(token, exc, arg))
+                else:
+                    return _InvalidCommandMatch(self)
 
         # we made sure that the provided args match the defined tokens
         # but we may have more tokens. if one of the left over tokens
