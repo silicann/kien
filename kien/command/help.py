@@ -53,7 +53,7 @@ def render_description(cmd, long_prefix='  - ',  text_width=WRAP_WIDTH):
         if token.choices:
             if token.description:
                 token_doc += os.linesep + token_indent
-            token_doc += 'Choices: %s' % ', '.join(sorted(map(str, token.choices)))
+            token_doc += '%s' % ' | '.join(sorted(map(str, token.choices)))
         doc += token_doc
 
     return TaggedString.help(doc) if doc else ''
