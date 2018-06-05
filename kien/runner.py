@@ -94,5 +94,5 @@ class ConsoleRunner:
                 return False
             except OSError as exc:
                 # catch remaining (sadly) uncaught exceptions
-                console.send_error("An undefined error occured: {}".format(exc))
+                console.send_error('An undefined error occurred: {}'.format(exc))
         return True
