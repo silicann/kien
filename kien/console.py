@@ -76,6 +76,10 @@ class Console:
         else:
             return strip_tags(s)
 
+    def _print(self, content, success=True):
+        end = ('\x20' if success else '\x07') + '\0' + self.linesep
+        print(content, file=self.output, end=end)
+
     def send_error(self, text):
         if self._output_format is OutputFormat.HUMAN:
             formatted = 'Error: {}'.format(text)
@@ -86,7 +90,7 @@ class Console:
             raise NotImplementedError('Unknown output format selected: {}'
                                       .format(self._output_format))
         self._last_status = 1
-        print(formatted, file=self.output, end=self.linesep)
+        self._print(formatted, False)
 
     def send_data(self, command_result):
         if self._output_format is OutputFormat.HUMAN:
@@ -98,7 +102,7 @@ class Console:
             raise NotImplementedError('Unknown output format selected: {}'
                                       .format(self._output_format))
         self._last_status = 0 if command_result.success else 1
-        print(formatted, file=self.output, end='\0' + self.linesep)
+        self._print(formatted)
 
     def get_prompt(self):
         if (self._output_format == OutputFormat.HUMAN) and self._show_echo:
