@@ -176,7 +176,7 @@ def render_tags(s, terminal: blessings.Terminal):
             'error': terminal.red,
             'label': terminal.bold,
             'help': terminal.italic_dim,
-            'header': lambda s: s
+            'header': lambda s: terminal.bold(s.upper()),
         }[tag](content)
         return replaced_value
 

@@ -29,12 +29,21 @@ def _indent_no_first():
     return callback
 
 
+def _wrap_indent(text, prefix, text_width=WRAP_WIDTH):
+    wrapped_text = os.linesep.join(wrap(_str(text), width=text_width))
+    return indent(wrapped_text, prefix)
+
+
+def _str(text):
+    return text.strip() if isinstance(text, str) else ''
+
+
 def render_description(cmd, long_prefix='  - ',  text_width=WRAP_WIDTH):
-    doc = re.sub(r'[ ]{2,}', '', cmd.__doc__.strip() if cmd.__doc__ else '')
+    doc = re.sub(r'[ ]{2,}', '', _str(cmd.__doc__))
     _indent = '\t' + ' ' * len(long_prefix)
 
     if doc:
-        lines = indent(os.linesep.join(wrap(doc, text_width)), _indent).split(os.linesep)
+        lines = _wrap_indent(doc, _indent, text_width).split(os.linesep)
         lines[0] = lines[0].replace(_indent, '\t' + long_prefix)
         doc = os.linesep + os.linesep.join(lines)
     for token in cmd.tokens:
@@ -72,9 +81,9 @@ def describe_command_list(commands: dict):
 def describe_command(terminal, all_commands, root):
     yield TaggedString.header('%s command' % str(root))
     if root.__commander__.__doc__:
-        yield TaggedString.help(indent(root.__commander__.__doc__.strip(), '  '))
+        yield TaggedString.help(_wrap_indent(root.__commander__.__doc__, ''))
     yield ''
-    yield TaggedString.label('Supported Commands')
+    yield TaggedString.label('Supported Subcommands')
     public_commands = filter_public_commands(all_commands)
     sub_commands = [cmd for cmd in public_commands if is_command_root(root, cmd)]
     first = True
@@ -85,7 +94,7 @@ def describe_command(terminal, all_commands, root):
             yield ''
 
         if group is not None:
-            yield '\t%s:' % TaggedString.label(group.name)
+            yield '\t%s' % TaggedString.label(group.name)
             if group.description:
                 yield TaggedString.help(indent(os.linesep.join(wrap(group.description)), '\t  '))
         for cmd in group_commands:
