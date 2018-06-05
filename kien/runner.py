@@ -68,7 +68,6 @@ class ConsoleRunner:
 
     @staticmethod
     def _process_line(console, commander, ignore_end_of_file) -> bool:
-        """ return False if the user signalled exit/quit/EOF """
         prompt = console.get_prompt()
         try:
             if prompt:
