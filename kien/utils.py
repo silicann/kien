@@ -283,3 +283,23 @@ def read_object_path(obj, obj_path, default=_undefined_result):
     # from the result of this run
     else:
         return read_object_path(result, new_obj_path)
+
+
+def failsafe(exc_type=Exception, enable=True, callback=None):
+    """ keep a function from failing
+    :param exc_type: the exception type that should be catched
+    :param enable: if exception handling should be enabled
+    :param callback: an optional callback for processing and on-failure return value
+    """
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            if enable:
+                try:
+                    return func(*args, **kwargs)
+                except exc_type as exc:
+                    if callback:
+                        return callback(exc, args, kwargs)
+            else:
+                return func(*args, **kwargs)
+        return wrapper
+    return decorator
