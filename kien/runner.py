@@ -4,7 +4,7 @@ import sys
 from typing import Sequence
 from .console import Console
 from .events import ConsoleExitEvent
-from .utils import autoload
+from .utils import autoload, failsafe
 from .error import ParseError, ItemNotFoundError
 
 
@@ -28,6 +28,9 @@ class ConsoleRunner:
                             help='Read history from and write it to the specified file')
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
+        parser.add_argument('--failsafe', action='store_true',
+                            help='keep the application running no matter what '
+                                 'runtime exceptions are thrown')
         parser.add_argument('--simulate', dest='simulate', action='store_true',
                             help='Show which command would have been executed instead of '
                                  'executing it')
@@ -55,15 +58,20 @@ class ConsoleRunner:
             if self.cli_args.history is not None:
                 readline.read_history_file(self.cli_args.history)
 
+            # start the application loop
             while True:
+                @failsafe(enable=self.cli_args.failsafe, callback=lambda *args: True)
+                def _process_line():
+                    return self._process_line(console, self.commander,
+                                              ignore_end_of_file=self.cli_args.ignore_eof)
                 try:
-                    if not self._process_line(console, self.commander,
-                                              ignore_end_of_file=self.cli_args.ignore_eof):
+                    if not _process_line():
                         if self.cli_args.history is not None:
                             readline.write_history_file(self.cli_args.history)
                         break
                 except KeyboardInterrupt:
-                    # slow / long operations (or repetitions) may be interrupted (without quitting)
+                    # slow / long operations (or repetitions)
+                    # may be interrupted (without quitting)
                     console.linefeed()
 
     @staticmethod
