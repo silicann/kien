@@ -1,6 +1,8 @@
 # kien release changelog
 
 1. UNRELEASED
+
+1. v0.4.0
   
    * BREAK: signature of CommandResult changed, 
             errors should now be handled via `raise CommandError`
