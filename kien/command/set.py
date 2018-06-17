@@ -5,8 +5,7 @@ from ..transformation import to_bool, to_enum
 
 class OutputFormat(enum.Enum):
     HUMAN = 'human'
-    # TODO: implement JSON output format
-    # JSON = 'json'
+    JSON = 'json'
 
 
 command = create_commander('set', description='Change properties of the console interface.')

@@ -16,6 +16,7 @@ kien has support for:
  * transformation
  * auto-generated help and documentation
  * dependency-injection
+ * human-readable and json output
  
 ![Prompt example showing how the say-some-name example works in action](./docs/say-some-name-example.png)
 
@@ -50,8 +51,6 @@ PYTHONPATH=. python3 examples/say-some-name.py
   refactoring. 
   
 * There is little documentation
-
-* JSON output for machines is not (yet) ready 
 
 ## Say my name
 
