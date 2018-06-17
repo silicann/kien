@@ -100,7 +100,7 @@ class Console:
         print(content, file=self.output, end=end)
 
     def get_prompt(self):
-        if (self._output_format == OutputFormat.HUMAN) and self._show_echo:
+        if self._output_format == OutputFormat.HUMAN and self._show_echo:
             prompt = self._prompt() if callable(self._prompt) else self._prompt
         else:
             prompt = None
