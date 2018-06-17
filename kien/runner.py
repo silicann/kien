@@ -100,7 +100,4 @@ class ConsoleRunner:
             except ConsoleExitEvent:
                 # the user requested to leave the terminal
                 return False
-            except OSError as exc:
-                # catch remaining (sadly) uncaught exceptions
-                console.send_error('An undefined error occurred: {}'.format(exc))
         return True
