@@ -1,4 +1,5 @@
 import argparse
+import logging
 import readline
 import sys
 from typing import Sequence
@@ -6,6 +7,8 @@ from .console import Console
 from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
 from .error import CommandError
+
+logger = logging.getLogger('eliza-runner')
 
 
 class ConsoleRunner:
@@ -31,6 +34,9 @@ class ConsoleRunner:
         parser.add_argument('--failsafe', action='store_true',
                             help='keep the application running no matter what '
                                  'runtime exceptions are thrown')
+        parser.add_argument('--failsafe-errors', action='store_true',
+                            help='in case failsafe is enabled this option will log any unhandled '
+                                 'exceptions that are encountered')
         parser.add_argument('--simulate', dest='simulate', action='store_true',
                             help='Show which command would have been executed instead of '
                                  'executing it')
@@ -58,9 +64,14 @@ class ConsoleRunner:
             if self.cli_args.history is not None:
                 readline.read_history_file(self.cli_args.history)
 
+            def handle_unhandled_exception(exc, *args):
+                if self.cli_args.failsafe_errors:
+                    logger.error('unhandled exception', exc_info=exc, extra=dict(callargs=args))
+                return True
+
             # start the application loop
             while True:
-                @failsafe(enable=self.cli_args.failsafe, callback=lambda *args: True)
+                @failsafe(enable=self.cli_args.failsafe, callback=handle_unhandled_exception)
                 def _process_line():
                     return self._process_line(console, self.commander,
                                               ignore_end_of_file=self.cli_args.ignore_eof)
