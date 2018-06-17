@@ -41,8 +41,8 @@ PYTHONPATH=. python3 examples/say-some-name.py
   recently has been extracted from an application that only 
   tests the actual commands that kien executes. In this
   sense there are tests that cover most of kien’s functionality
-  but they simple are not public. This being said: kien
-  should be and will have tests in the future.
+  but they simple are not public. That being said: kien
+  should and will have tests in the future.
 
 * Output formatting & Terminal handling
 
