@@ -3,7 +3,7 @@ import readline
 import sys
 from typing import Sequence
 from .console import Console
-from .events import ConsoleExitEvent
+from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
 from .error import CommandError
 
@@ -98,6 +98,8 @@ class ConsoleRunner:
                     console.send_data(result)
             except CommandError as exc:
                 console.send_data(exc)
+            except StopProcessingEvent:
+                return True
             except ConsoleExitEvent:
                 # the user requested to leave the terminal
                 return False

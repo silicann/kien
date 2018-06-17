@@ -8,6 +8,7 @@ import re
 import shlex
 from typing import Sequence
 import blessings
+from .events import StopProcessingEvent
 
 
 PATH_ATTRIBUTE = re.compile(r'^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)$')
@@ -20,20 +21,18 @@ TAG_REGEX = re.compile(r'(?:<(?P<tag>[a-z]+)>)'
 TokenMismatch = namedtuple('TokenMismatch', ['token', 'exception', 'value'])
 
 
-def tokenize_args(fn):
-    def decorator(command, *args, **kwargs):
-        if isinstance(command, str):
-            command = command.strip()
-            command = shlex.split(command) if not command.startswith('#') else None
-
-        if command is not None:
-            return fn(command, *args, **kwargs)
-        else:
-            # todo comments in shells usually carry the last emitted exit code
-            from .commands import CommandResult
-            return CommandResult(message='')
-    decorator.__name__ = fn.__name__
-    decorator.__doc__ = fn.__doc__
+def tokenize_args(comment_characters=('#',)):
+    def decorator(func):
+        def wrapper(command, *args, **kwargs):
+            if isinstance(command, str):
+                command = command.strip()
+                if any(map(lambda c: command.startswith(c), comment_characters)):
+                    raise StopProcessingEvent()
+                command = shlex.split(command)
+            return func(command, *args, **kwargs)
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        return wrapper
     return decorator
 
 

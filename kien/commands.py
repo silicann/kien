@@ -480,7 +480,7 @@ def create_commander(name, description=None):
             return transform(**kwargs)
 
         @staticmethod
-        @tokenize_args
+        @tokenize_args()
         def dispatch(args, simulate=False) -> Iterator[CommandResult]:
             resolved_commands = _resolve_commands(args)
 
