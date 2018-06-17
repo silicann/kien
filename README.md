@@ -8,6 +8,10 @@ If you want to provide an human and machine friendly text-based interface
 on a serial device kien is for you. kien’s best-case scenario: you’re
 just writing the code that actually does things.
 
+Please note that kien is under active development and does not have a stable
+API yet. Breaking changes will occur between minor versions as long as we
+didn’t publish v1.0.0 but will be documented in the [changelog](./CHANGELOG.md).
+
 kien has support for:
 
  * (optional) keywords 
@@ -22,7 +26,7 @@ kien has support for:
 
 ## Examples
 
-kien works by annotating functions with decorators. See the examples folder 😊
+kien mostly works by annotating functions with decorators. See the examples folder 😊
 
 ```sh
 # run examples with pipenv
