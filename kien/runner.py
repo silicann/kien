@@ -5,7 +5,7 @@ from typing import Sequence
 from .console import Console
 from .events import ConsoleExitEvent
 from .utils import autoload, failsafe
-from .error import ParseError, ItemNotFoundError
+from .error import CommandError
 
 
 class ConsoleRunner:
@@ -91,12 +91,13 @@ class ConsoleRunner:
             else:
                 # request exit
                 return False
+
         if line:
             try:
                 for result in commander.dispatch(line):
                     console.send_data(result)
-            except (ItemNotFoundError, ParseError) as exc:
-                console.send_error(str(exc))
+            except CommandError as exc:
+                console.send_data(exc)
             except ConsoleExitEvent:
                 # the user requested to leave the terminal
                 return False

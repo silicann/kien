@@ -9,6 +9,7 @@ from ..commands import create_commander, var, CommandResult, filter_root_command
 from ..transformation import flatten, unique
 from ..utils import join_generator_string, TaggedString
 from ..utils import strip_tags, read_object_path
+from ..error import CommandError
 
 WRAP_WIDTH = 80
 
@@ -130,12 +131,12 @@ def help_command(commands, command=None):
         (str(cmd), cmd) for cmd in sorted(root_commands, key=lambda cmd: str(cmd))
     )
     if command is None:
-        yield CommandResult(message=describe_command_list(command_map))
+        yield CommandResult(describe_command_list(command_map))
     else:
         try:
-            yield CommandResult(message=describe_command(commands, command_map[command]))
-        except KeyError:
-            yield CommandResult(False, 'No help for command "%s" available' % command)
+            yield CommandResult(describe_command(commands, command_map[command]))
+        except KeyError as exc:
+            raise CommandError('No help for command "%s" available' % command) from exc
 
 
 @command.inject(commands='__commands[]')

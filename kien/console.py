@@ -76,33 +76,28 @@ class Console:
         else:
             return strip_tags(s)
 
-    def _print(self, content, success=True):
-        end = ('\x20' if success else '\x07') + '\0' + self.linesep
+    def send_data(self, result):
+        if self._output_format not in OutputFormat:
+            raise NotImplementedError('Unknown output format selected: {}'
+                                      .format(self._output_format))
+
+        if self._output_format is OutputFormat.HUMAN:
+            content = self._format_output(str(result))
+        else:
+            if self._output_format is OutputFormat.JSON:
+                serializer = json.dumps
+            else:
+                raise NotImplementedError('no serializer for output formatted: {}'
+                                          .format(self._output_format))
+            content = serializer({
+                'data': result.data,
+                'status': result.status,
+                'code': result.code if hasattr(result, 'code') else None
+            })
+
+        self._last_status = result.status
+        end = ('\x20' if result.success else '\x07') + '\0' + self.linesep
         print(content, file=self.output, end=end)
-
-    def send_error(self, text):
-        if self._output_format is OutputFormat.HUMAN:
-            formatted = 'Error: {}'.format(text)
-        elif self._output_format is OutputFormat.JSON:
-            # TODO: add 'error_code'
-            formatted = json.dumps({'error_message': str(text)})
-        else:
-            raise NotImplementedError('Unknown output format selected: {}'
-                                      .format(self._output_format))
-        self._last_status = 1
-        self._print(formatted, False)
-
-    def send_data(self, command_result):
-        if self._output_format is OutputFormat.HUMAN:
-            formatted = self._format_output(command_result.message)
-        elif self._output_format is OutputFormat.JSON:
-            # TODO: add 'error_code'
-            formatted = json.dumps({'result': command_result.data})
-        else:
-            raise NotImplementedError('Unknown output format selected: {}'
-                                      .format(self._output_format))
-        self._last_status = 0 if command_result.success else 1
-        self._print(formatted)
 
     def get_prompt(self):
         if (self._output_format == OutputFormat.HUMAN) and self._show_echo:

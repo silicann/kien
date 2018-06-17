@@ -21,9 +21,7 @@ def set_state():
 def set_echo(console, state):
     """ enable/disable any output of prompts or typed text """
     console.set_echo(state)
-    yield CommandResult(
-        True, 'Echo is now {}'.format('enabled' if state else 'disabled'), None
-    )
+    yield CommandResult('Echo is now {}'.format('enabled' if state else 'disabled'))
 
 
 @command('output-format', var('format', choices=OutputFormat), parent=set_state)
@@ -31,4 +29,4 @@ def set_echo(console, state):
 def set_output_format(console, format: OutputFormat):
     """ switch the response output format """
     console.select_output_format(format)
-    yield CommandResult(True, 'Output format set to "{}"'.format(format.value), None)
+    yield CommandResult('Output format set to "{}"'.format(format.value))

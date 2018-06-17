@@ -6,6 +6,7 @@ from blinker import signal
 from .validation import validate, validate_value, one_of, ValidationError
 from .transformation import transform, transform_value
 from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
+from .error import CommandError
 
 
 class _Undefined:
@@ -13,13 +14,11 @@ class _Undefined:
 
 
 class CommandResult:
-    def __init__(self, success=True, message=None, data=None) -> None:
-        self.success = success
-        self.data = data
-
-        if message is None:
-            raise ValueError('message is required')
+    def __init__(self, message, data=None, success=True, status=None) -> None:
         self.message = message
+        self.data = data
+        self.success = success
+        self.status = status if status is not None else 0
 
     def __str__(self):
         return self.message
@@ -491,13 +490,13 @@ def create_commander(name, description=None):
                 try:
                     yield from resolved_commands.exact_match.command(args, require=_require)
                 except ValidationError as exc:
-                    yield CommandResult(
-                        False,
-                        message='Invalid argument{}: {}'.format(
-                            ' for field ' + str(exc.field) if exc.field else '', str(exc))
-                    )
+                    raise CommandError(
+                        'Invalid argument{}: {}'.format(
+                            ' for field ' + str(exc.field) if exc.field else '', str(exc)),
+                        data=exc.field, code='INVALID_ARGUMENT_FORMAT') from exc
             else:
-                yield CommandResult(False, resolved_commands.suggestion(_resolve_commands, args))
+                raise CommandError(resolved_commands.suggestion(_resolve_commands, args),
+                                   code='INVALID_COMMAND')
 
         @classmethod
         def fire(cls, args):
