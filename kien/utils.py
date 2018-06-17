@@ -44,13 +44,13 @@ def is_or_extends(item, cls):
 
 
 def join_generator_string(glue=os.linesep):
-    def decorator(fn):
-        def inner(*args, **kwargs):
-            result = fn(*args, **kwargs)
+    def decorator(func):
+        def wrapper(*args, **kwargs):
+            result = func(*args, **kwargs)
             return glue.join(result) if isinstance(result, Iterable) else str(result)
-        inner.__name__ = fn.__name__
-        inner.__doc__ = fn.__doc__
-        return inner
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        return wrapper
     return decorator
 
 
@@ -70,17 +70,17 @@ def columns(separator='\t', join_char=None):
         for index, column in enumerate(row):
             yield column.ljust(column_widths[index])
 
-    def decorator(fn):
+    def decorator(func):
         @join_generator_string()
-        def inner(*args, **kwargs):
-            rows = [line.split(separator) for line in fn(*args, *kwargs).split(os.linesep)]
+        def wrapper(*args, **kwargs):
+            rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
             column_widths = calculate_column_widths(rows)
             for row in rows:
                 yield join_char.join(fit_row(row, column_widths))
 
-        inner.__name__ = fn.__name__
-        inner.__doc__ = fn.__doc__
-        return inner
+        wrapper.__name__ = func.__name__
+        wrapper.__doc__ = func.__doc__
+        return wrapper
     return decorator
 
 
