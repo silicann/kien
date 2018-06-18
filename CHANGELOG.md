@@ -2,6 +2,9 @@
 
 1. UNRELEASED
 
+1. v0.4.1
+    * FIX: raise an exception if a dependency injection failed at runtime
+
 1. v0.4.0
   
    * BREAK: signature of CommandResult changed, 
