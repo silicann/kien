@@ -9,5 +9,6 @@ distribute-pypi:
 		echo "you need twine >v1.11.0" >&2; \
 		exit 1; \
 	fi
+	rm -rf dist/
 	python3 setup.py sdist
 	twine upload dist/*
