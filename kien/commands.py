@@ -6,7 +6,7 @@ from blinker import signal
 from .validation import validate, validate_value, one_of, ValidationError
 from .transformation import transform, transform_value
 from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
-from .error import CommandError
+from .error import CommandError, InjectionError
 
 
 class _Undefined:
@@ -383,7 +383,15 @@ def _build_inject_args(injections, require):
     result_args = {}
     for injector in injections:
         generator = require(injector.key)
-        result_args[injector.inject_as] = list(generator) if injector.collect else next(generator)
+        try:
+            value = list(generator) if injector.collect else next(generator)
+        except StopIteration as exc:
+            raise InjectionError(
+                'Dependency "{source}" injected as "{name}" was not provided at runtime. Did you '
+                'forget to call `command.provide("{source}", foo)` at some point?'.format(
+                    name=injector.inject_as, source=injector.key)
+            ) from exc
+        result_args[injector.inject_as] = value
     return result_args
 
 
