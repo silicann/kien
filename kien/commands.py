@@ -232,10 +232,23 @@ class _CommandMatches:
         @join_generator_string()
         def _render() -> str:
             matches = self.find_suggestable_matches(resolve, args)
-            if len(matches) == 1 and matches[0].token_mismatches:
-                for mismatch in matches[0].token_mismatches:
-                    yield '{name}: {message}'.format(
-                        name=mismatch.token.get_label(), message=str(mismatch.exception))
+            if len(matches) == 1:
+                # a single match has been found for the args. this is likely
+                # a command that was used almost correctly
+                match = matches[0]
+                if match.type is _MatchType.EXACT:
+                    # possible matches are resolved by skipping arguments from end
+                    # to start. if a command had too many arguments we may find an
+                    # exact match at some point. this is the case here
+                    yield 'You have provided too many arguments for this command.'
+                    yield 'Usage:\n\t' + match.command.get_label()
+                else:
+                    # if it’s not an exact match it’s a mismatch, because one of
+                    # the tokens was rejected (likely during validation).
+                    # display errors for each mismatched token.
+                    for mismatch in match.token_mismatches:
+                        yield '{name}: {message}'.format(
+                            name=mismatch.token.get_label(), message=str(mismatch.exception))
             else:
                 yield 'Could not find the command for "%s"' % ' '.join(args)
                 if matches:
