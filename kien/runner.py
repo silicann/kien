@@ -3,12 +3,17 @@ import logging
 import readline
 import sys
 from typing import Sequence
+from blinker import signal
 from .console import Console
 from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
 from .error import CommandError
 
 logger = logging.getLogger('eliza-runner')
+
+on_result = signal('result')
+on_dispatch = signal('dispatch')
+on_error = signal('error')
 
 
 class ConsoleRunner:
@@ -85,8 +90,7 @@ class ConsoleRunner:
                     # may be interrupted (without quitting)
                     console.linefeed()
 
-    @staticmethod
-    def _process_line(console, commander, ignore_end_of_file) -> bool:
+    def _process_line(self, console, commander, ignore_end_of_file) -> bool:
         prompt = console.get_prompt()
         try:
             if prompt:
@@ -105,9 +109,12 @@ class ConsoleRunner:
 
         if line:
             try:
+                on_dispatch.send(self, line=line)
                 for result in commander.dispatch(line):
+                    on_result.send(self, result=result)
                     console.send_data(result)
             except CommandError as exc:
+                on_error.send(self, exc=exc)
                 console.send_data(exc)
             except StopProcessingEvent:
                 return True
