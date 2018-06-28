@@ -247,9 +247,13 @@ class _CommandMatches:
                     # if it’s not an exact match it’s a mismatch, because one of
                     # the tokens was rejected (likely during validation).
                     # display errors for each mismatched token.
-                    for mismatch in match.token_mismatches:
-                        yield '{name}: {message}'.format(
-                            name=mismatch.token.get_label(), message=str(mismatch.exception))
+                    if len(match.token_mismatches) > 0:
+                        for mismatch in match.token_mismatches:
+                            yield '{name}: {message}'.format(
+                                name=mismatch.token.get_label(), message=str(mismatch.exception))
+                    else:
+                        yield 'You have not provided sufficient arguments for this command.'
+                        yield 'Usage:\n\t' + match.command.get_label()
             else:
                 yield 'Could not find the command for "%s"' % ' '.join(args)
                 if matches:
