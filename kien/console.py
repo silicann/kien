@@ -77,6 +77,8 @@ class Console:
             return strip_tags(s)
 
     def send_data(self, result):
+        status = getattr(result, 'status', self._last_status)
+        error_code = getattr(result, 'code', None)
         if self._output_format not in OutputFormat:
             raise NotImplementedError('Unknown output format selected: {}'
                                       .format(self._output_format))
@@ -91,11 +93,11 @@ class Console:
                                           .format(self._output_format))
             content = serializer({
                 'data': result.data,
-                'status': result.status,
-                'code': result.code if hasattr(result, 'code') else None
+                'status': status,
+                'code': error_code
             })
 
-        self._last_status = result.status
+        self._last_status = status
         end = ('\x20' if result.success else '\x07') + '\0' + self.linesep
         print(content, file=self.output, end=end)
 
