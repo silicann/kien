@@ -1,5 +1,6 @@
 import collections
 import enum
+from inspect import signature
 from itertools import groupby
 from typing import List, Sequence, Callable, Any, Optional, Iterator, Set
 from blinker import signal
@@ -283,7 +284,7 @@ class _Command:
 
     def __call__(self, args, require):
         fn_args = _build_args(self.all_tokens, args)
-        inject_args = _build_inject_args(self.all_injections, require)
+        inject_args = _build_inject_args(self.fn, self.all_injections, require)
         try:
             return self.fn(**fn_args, **inject_args)
         except ValidationError as exc:
@@ -392,19 +393,11 @@ class _Command:
             return self.inject
 
 
-def _build_inject_args(injections, require):
+def _build_inject_args(func, injections, require):
     result_args = {}
-    for injector in injections:
-        generator = require(injector.key)
-        try:
-            value = list(generator) if injector.collect else next(generator)
-        except StopIteration as exc:
-            raise InjectionError(
-                'Dependency "{source}" injected as "{name}" was not provided at runtime. Did you '
-                'forget to call `command.provide("{source}", foo)` at some point?'.format(
-                    name=injector.inject_as, source=injector.key)
-            ) from exc
-        result_args[injector.inject_as] = value
+    for injection in injections:
+        key, value = injection.resolve(func, require)
+        result_args[key] = value
     return result_args
 
 
@@ -433,14 +426,40 @@ def _build_args(tokens, args: Sequence):
 
 
 class _Injection:
-    def __init__(self, key, inject_as, collect) -> None:
+    def __init__(self, key, inject_as, collect, default) -> None:
         self.key = key
         self.inject_as = inject_as or key
         self.collect = collect
+        self.default = default
+
+    def _get_default(self, func):
+        sig = signature(func)
+        if self.key in sig.parameters:
+            parameter = sig.parameters[self.key]
+            if parameter.default is not parameter.empty:
+                return parameter.default
+        return self.default
+
+    def resolve(self, func, require):
+        generator = require(self.key)
+        try:
+            value = list(generator) if self.collect else next(generator)
+        except StopIteration as exc:
+            default = self._get_default(func)
+            if default is _Undefined:
+                raise InjectionError(
+                    'Dependency "{source}" injected as "{name}" was not provided at runtime. '
+                    'Did you forget to call `command.provide("{source}", foo)` '
+                    'at some point or to set a default value?'.format(
+                        name=self.inject_as, source=self.key)
+                ) from exc
+            else:
+                value = default
+        return self.inject_as, value
 
 
-def require(key=None, inject_as=None, collect=False):
-    return _Injection(key, inject_as, collect)
+def require(key=None, inject_as=None, collect=False, default=_Undefined):
+    return _Injection(key, inject_as, collect, default)
 
 
 def create_commander(name, description=None):
@@ -524,12 +543,15 @@ def create_commander(name, description=None):
             return list(cls.dispatch(args))
 
         @staticmethod
-        def inject(**requires) -> Callable:
-            requires = _normalize_injections(requires)
+        def inject(*arg_requires, **kwarg_requires) -> Callable:
+            arg_requires = _normalize_injections(arg_requires)
+            kwarg_requires = _normalize_injections(kwarg_requires)
 
             def decorator(fn):
                 def inner(*args, **kwargs):
-                    injections = _build_inject_args(requires, _require)
+                    arg_injections = _build_inject_args(fn, arg_requires, _require)
+                    kwarg_injections = _build_inject_args(fn, kwarg_requires, _require)
+                    injections = _merge_dicts(arg_injections, kwarg_injections)
                     fargs, fkwargs = _fit_args(fn, args, _merge_dicts(injections, kwargs))
                     return fn(*fargs, **fkwargs)
                 inner.__name__ = fn.__name__
