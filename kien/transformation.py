@@ -1,4 +1,5 @@
 import collections
+from functools import wraps
 import itertools
 import re
 
@@ -9,7 +10,7 @@ FALSE_CHOICES = ('false', '0', 'off', 'no', 'disable')
 
 
 def transform(**fields):
-    def decorator(fn):
+    def decorator(func):
         def inner(*args, **kwargs):
             transformed_kwargs = {}
             for field, transformator in fields.items():
@@ -17,9 +18,9 @@ def transform(**fields):
                     transformed_kwargs[field] = transform_value(transformator, kwargs.pop(field))
                 except KeyError:
                     transformed_kwargs[field] = None
-            return fn(*args, **transformed_kwargs, **kwargs)
         inner.__name__ = fn.__name__
         inner.__doc__ = fn.__doc__
+            return func(*args, **transformed_kwargs, **kwargs)
         return inner
     return decorator
 
@@ -46,23 +47,23 @@ class Transformable:
 
 
 class Transformator(Transformable):
-    def __init__(self, fn, args, kwargs):
-        self.fn = fn
+    def __init__(self, func, args, kwargs):
+        self.func = func
         self.args = args
         self.kwargs = kwargs
 
     def transform(self, value):
-        return self.fn(*self.args, value, **self.kwargs)
+        return self.func(*self.args, value, **self.kwargs)
 
     def __call__(self, value):
         self.transform(value)
 
 
-def simple_transformator(fn):
+def simple_transformator(func):
     def decorator(*args, **kwargs):
-        transformator = Transformator(fn, args, kwargs)
-        transformator.__name__ = fn.__name__
-        transformator.__doc__ = fn.__doc__
+        transformator = Transformator(func, args, kwargs)
+        transformator.__name__ = func.__name__
+        transformator.__doc__ = func.__doc__
         return transformator
     decorator.__is_transformator = True
     return decorator
