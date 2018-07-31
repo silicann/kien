@@ -39,6 +39,37 @@ def transform_value(transformator, value):
     return value
 
 
+class BuildTimeTransformContext:
+    _indicator_name = '__takes_transform_context'
+
+    def __init__(self, value, kwargs) -> None:
+        self.value = value
+        self.kwargs = kwargs
+
+    @classmethod
+    def takes_context(cls, func):
+        return getattr(func, cls._indicator_name, False) is True
+
+    @classmethod
+    def decorate(cls, func, auto_spread):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            if auto_spread and len(args) >= 1 and isinstance(args[-1], cls):
+                args = list(args)
+                context = args.pop()  # type: BuildTimeTransformContext
+                return func(*args, context.value, **context.kwargs, **kwargs)
+            else:
+                return func(*args, **kwargs)
+        setattr(wrapper, cls._indicator_name, True)
+        return wrapper
+
+
+def takes_transform_context(auto_spread=True):
+    def decorator(func):
+        return BuildTimeTransformContext.decorate(func, auto_spread)
+    return decorator
+
+
 class Transformable:
     @classmethod
     def transform(cls, value):

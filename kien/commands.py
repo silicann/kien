@@ -5,7 +5,7 @@ from itertools import groupby
 from typing import List, Sequence, Callable, Any, Optional, Iterator, Set
 from blinker import signal
 from .validation import validate, validate_value, one_of, ValidationError
-from .transformation import transform, transform_value
+from .transformation import BuildTimeTransformContext, transform, transform_value
 from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
 from .error import CommandError, InjectionError
 
@@ -415,12 +415,16 @@ def _build_args(tokens, args: Sequence):
             break
 
         if token.name:
+            def _transform(value):
+                if BuildTimeTransformContext.takes_context(token.transform):
+                    value = BuildTimeTransformContext(value, dict(result_args))
+                return transform_value(token.transform, value)
             arg = args[0:] if token.greedy else args.pop(0)
             if token.transform and isinstance(arg, collections.Iterable) and \
                     not isinstance(arg, str):
-                result = list(map(lambda x: transform_value(token.transform, x), arg))
+                result = list(map(lambda x: _transform(x), arg))
             elif token.transform:
-                result = transform_value(token.transform, arg)
+                result = _transform(arg)
             else:
                 result = arg
             result_args[token.name] = result
