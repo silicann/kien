@@ -11,6 +11,7 @@ FALSE_CHOICES = ('false', '0', 'off', 'no', 'disable')
 
 def transform(**fields):
     def decorator(func):
+        @wraps(func)
         def inner(*args, **kwargs):
             transformed_kwargs = {}
             for field, transformator in fields.items():
@@ -18,8 +19,6 @@ def transform(**fields):
                     transformed_kwargs[field] = transform_value(transformator, kwargs.pop(field))
                 except KeyError:
                     transformed_kwargs[field] = None
-        inner.__name__ = fn.__name__
-        inner.__doc__ = fn.__doc__
             return func(*args, **transformed_kwargs, **kwargs)
         return inner
     return decorator
