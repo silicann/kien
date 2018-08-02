@@ -302,6 +302,12 @@ class _Command:
     def __str__(self):
         return ' '.join([str(token) for token in self.all_tokens])
 
+    def __getattr__(self, name: str) -> Any:
+        # this object acts as a wrapper for the underlying function
+        # so it’s a good idea to look for any missing attributes on
+        # the function itself
+        return getattr(self.func, name)
+
     def match(self, args):
         if not self.is_executable:
             return _InvalidCommandMatch(self)
