@@ -1,5 +1,5 @@
 import collections
-from functools import wraps
+from functools import update_wrapper, wraps
 import itertools
 import re
 
@@ -12,7 +12,7 @@ FALSE_CHOICES = ('false', '0', 'off', 'no', 'disable')
 def transform(**fields):
     def decorator(func):
         @wraps(func)
-        def inner(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             transformed_kwargs = {}
             for field, transformator in fields.items():
                 try:
@@ -20,7 +20,7 @@ def transform(**fields):
                 except KeyError:
                     transformed_kwargs[field] = None
             return func(*args, **transformed_kwargs, **kwargs)
-        return inner
+        return wrapper
     return decorator
 
 
@@ -92,8 +92,7 @@ class Transformator(Transformable):
 def simple_transformator(func):
     def decorator(*args, **kwargs):
         transformator = Transformator(func, args, kwargs)
-        transformator.__name__ = func.__name__
-        transformator.__doc__ = func.__doc__
+        update_wrapper(transformator, func)
         return transformator
     decorator.__is_transformator = True
     return decorator

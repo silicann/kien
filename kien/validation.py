@@ -1,10 +1,12 @@
+from functools import update_wrapper, wraps
 import re
 from typing import Any
 
 
 def validate(**fields):
-    def decorator(fn):
-        def inner(*args, **kwargs):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             for field, validator in fields.items():
                 try:
                     field_value = kwargs[field]
@@ -15,10 +17,8 @@ def validate(**fields):
                 except ValidationError as exc:
                     exc.field = field
                     raise exc
-            return fn(*args, **kwargs)
-        inner.__name__ = fn.__name__
-        inner.__doc__ = fn.__doc__
-        return inner
+            return func(*args, **kwargs)
+        return wrapper
     return decorator
 
 
@@ -62,13 +62,13 @@ class _MultipleValidator(_AbstractValidator):
 
 
 class Validator(_AbstractValidator):
-    def __init__(self, fn, args, kwargs):
-        self.fn = fn
+    def __init__(self, func, args, kwargs):
+        self.func = func
         self.args = args
         self.kwargs = kwargs
 
     def validate(self, value):
-        self.fn(*self.args, value, **self.kwargs)
+        self.func(*self.args, value, **self.kwargs)
 
 
 class _Or(_AbstractValidator):
@@ -105,10 +105,10 @@ class _And(_AbstractValidator):
         validate_value(self.second, value)
 
 
-def simple_validator(fn):
+def simple_validator(func):
     def decorator(*args, **kwargs):
-        validator = Validator(fn, args, kwargs)
-        validator.__name__ = fn.__name__
+        validator = Validator(func, args, kwargs)
+        update_wrapper(validator, func)
         return validator
     decorator.__is_validator = True
     return decorator

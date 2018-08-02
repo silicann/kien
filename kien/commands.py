@@ -1,5 +1,6 @@
 import collections
 import enum
+from functools import update_wrapper, wraps
 from inspect import signature
 from itertools import groupby
 from typing import List, Sequence, Callable, Any, Optional, Iterator, Set
@@ -277,8 +278,9 @@ class _CommandMatches:
 
 
 class _Command:
-    def __init__(self, fn, tokens: List[_Token], parent, is_abstract, group, inject, is_disabled):
-        self.fn = fn
+    def __init__(self, func, tokens: List[_Token], parent, is_abstract, group, inject,
+                 is_disabled):
+        self.func = func
         self.tokens = tokens
         self.parent = parent
         self.is_abstract = is_abstract
@@ -287,10 +289,10 @@ class _Command:
         self._is_disabled = is_disabled
 
     def __call__(self, args, require):
-        fn_args = _build_args(self.all_tokens, args)
-        inject_args = _build_inject_args(self.fn, self.all_injections, require)
+        func_args = _build_args(self.all_tokens, args)
+        inject_args = _build_inject_args(self.func, self.all_injections, require)
         try:
-            return self.fn(**fn_args, **inject_args)
+            return self.func(**func_args, **inject_args)
         except ValidationError as exc:
             if exc.field:
                 for token in self.all_tokens:
@@ -561,16 +563,15 @@ def create_commander(name, description=None):
             arg_requires = _normalize_injections(arg_requires)
             kwarg_requires = _normalize_injections(kwarg_requires)
 
-            def decorator(fn):
-                def inner(*args, **kwargs):
-                    arg_injections = _build_inject_args(fn, arg_requires, _require)
-                    kwarg_injections = _build_inject_args(fn, kwarg_requires, _require)
+            def decorator(func):
+                @wraps(func)
+                def wrapper(*args, **kwargs):
+                    arg_injections = _build_inject_args(func, arg_requires, _require)
+                    kwarg_injections = _build_inject_args(func, kwarg_requires, _require)
                     injections = _merge_dicts(arg_injections, kwarg_injections)
-                    fargs, fkwargs = _fit_args(fn, args, _merge_dicts(injections, kwargs))
-                    return fn(*fargs, **fkwargs)
-                inner.__name__ = fn.__name__
-                inner.__doc__ = fn.__doc__
-                return inner
+                    fargs, fkwargs = _fit_args(func, args, _merge_dicts(injections, kwargs))
+                    return func(*fargs, **fkwargs)
+                return wrapper
             return decorator
 
         def __call__(self, *tokens, parent=None, is_abstract=False, group=None, inject=None,
@@ -578,14 +579,13 @@ def create_commander(name, description=None):
             tokens = _normalize_tokens(tokens)
             injections = _normalize_injections(inject)
 
-            def decorator(fn):
-                fn_command = _Command(fn, tokens, parent, is_abstract,
-                                      group, injections, is_disabled)
-                fn_command.__name__ = fn.__name__
-                fn_command.__doc__ = fn.__doc__
-                fn_command.__commander__ = self
-                commands.append(fn_command)
-                return fn_command
+            def decorator(func):
+                func_command = _Command(func, tokens, parent, is_abstract,
+                                        group, injections, is_disabled)
+                update_wrapper(func_command, func)
+                func_command.__commander__ = self
+                commands.append(func_command)
+                return func_command
             return decorator
 
         def compose(self, *commanders) -> 'Commander':
@@ -611,10 +611,10 @@ def _merge_dicts(*dicts):
     return result
 
 
-def _fit_args(fn, args, kwargs):
+def _fit_args(func, args, kwargs):
     args = list(args)
-    fn_args = fn.__code__.co_varnames[:fn.__code__.co_argcount]
-    for index, arg in enumerate(fn_args):
+    func_args = func.__code__.co_varnames[:func.__code__.co_argcount]
+    for index, arg in enumerate(func_args):
         if arg in kwargs:
             args.insert(index, kwargs.pop(arg))
     return args, kwargs

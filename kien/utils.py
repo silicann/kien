@@ -1,4 +1,5 @@
 from collections import namedtuple, Iterable, UserString
+from functools import wraps
 import importlib
 import os
 import inspect
@@ -23,6 +24,7 @@ TokenMismatch = namedtuple('TokenMismatch', ['token', 'exception', 'value'])
 
 def tokenize_args(comment_characters=('#',)):
     def decorator(func):
+        @wraps(func)
         def wrapper(command, *args, **kwargs):
             if isinstance(command, str):
                 command = command.strip()
@@ -30,8 +32,6 @@ def tokenize_args(comment_characters=('#',)):
                     raise StopProcessingEvent()
                 command = shlex.split(command)
             return func(command, *args, **kwargs)
-        wrapper.__name__ = func.__name__
-        wrapper.__doc__ = func.__doc__
         return wrapper
     return decorator
 
@@ -45,11 +45,10 @@ def is_or_extends(item, cls):
 
 def join_generator_string(glue=os.linesep):
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
             return glue.join(result) if isinstance(result, Iterable) else str(result)
-        wrapper.__name__ = func.__name__
-        wrapper.__doc__ = func.__doc__
         return wrapper
     return decorator
 
@@ -72,14 +71,12 @@ def columns(separator='\t', join_char=None):
 
     def decorator(func):
         @join_generator_string()
+        @wraps(func)
         def wrapper(*args, **kwargs):
             rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
             column_widths = calculate_column_widths(rows)
             for row in rows:
                 yield join_char.join(fit_row(row, column_widths))
-
-        wrapper.__name__ = func.__name__
-        wrapper.__doc__ = func.__doc__
         return wrapper
     return decorator
 
@@ -103,13 +100,14 @@ def throttle(frequency=None, limit=None):
     last_call = [None]
     call_count = [0]
 
-    def wrapper(fn):
-        def inner_wrapper(*args, **kwargs):
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
             current_time = time.time()
             if last_call[0] is None or last_call[0] + calls_per_second < current_time:
                 last_call[0] = current_time
                 call_count[0] += 1
-                result = fn(*args, **kwargs)
+                result = func(*args, **kwargs)
                 if inspect.isgenerator(result):
                     yield from result
                 else:
@@ -117,10 +115,8 @@ def throttle(frequency=None, limit=None):
 
             if call_count[0] == limit:
                 raise throttle.Stop()
-        inner_wrapper.__name__ = fn.__name__
-        inner_wrapper.__doc__ = fn.__doc__
-        return inner_wrapper
-    return wrapper
+        return wrapper
+    return decorator
 
 
 throttle.Stop = _Stop
