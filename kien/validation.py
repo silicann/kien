@@ -204,6 +204,6 @@ def one_of(choices, value):
 
 
 @simple_validator
-def regex(expr, value):
+def regex(expr, value, message=None):
     if re.match(expr, value) is None:
-        raise ValidationError('has invalid format')
+        raise ValidationError(message if message is not None else 'has invalid format')
