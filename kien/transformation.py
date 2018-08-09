@@ -2,6 +2,7 @@ import collections
 from functools import update_wrapper, wraps
 import itertools
 import re
+from typing import Hashable, Iterable, Mapping
 
 from .validation import validate_value, one_of
 
@@ -124,7 +125,22 @@ def from_regex(expr, value, convert_to=tuple):
 
 
 @simple_transformator
-def to_enum(enum, value):
+def to_enum(enum, value, static_map: Mapping[Hashable, Iterable[str]] = None):
+    """
+    Converts a literal value to a value from an enum.
+
+    :param enum: the enum the value should be converted to
+    :param value: a value that should be mapped to the provided enum
+    :param static_map: a static mapping for aliases that should be respected while
+                       converting to the enum. Expects an enum value mapped to a
+                       an Iterable of str.
+    :return: returns the enum value or None
+    """
+    if static_map is not None:
+        for enum_value, mappings in static_map.items():
+            if value in mappings:
+                value = enum_value
+                break
     if value is None:
         return None
     for item in tuple(enum):
