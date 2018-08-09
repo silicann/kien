@@ -39,7 +39,8 @@ class _Token:
     is_placeholder = False
 
     def __init__(self, value=_Undefined, name=None, is_optional=False,
-                 greedy=False, transform=None, choices=None, description=None):
+                 greedy=False, transform=None, choices=None, description=None,
+                 aliases=None):
         """ specify possible value of a command string token
 
         @param choices: may be None, an enum or an iterable
@@ -51,6 +52,7 @@ class _Token:
         self.greedy = greedy
         self.transform = transform
         self.description = description
+        self.aliases = frozenset(aliases or [])
         if choices is None:
             self.choices = set()
         elif _is_enum(choices):
@@ -60,7 +62,7 @@ class _Token:
 
     def matches(self, value):
         if self.value is not _Undefined:
-            return self.value == value
+            return self.value == value or value in self.aliases
         if self.name and self.transform:
             # we trigger the token validation here to handle args that
             # have been misspelled and to provide command suggestions
@@ -123,6 +125,10 @@ def var(name, value=_Undefined, is_optional=False, transform=None, greedy=None,
 
 def optional(value):
     return _Placeholder(value, is_optional=True)
+
+
+def keyword(value, aliases=None):
+    return _Token(value, aliases=aliases)
 
 
 def group(name, description=None):
