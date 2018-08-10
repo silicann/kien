@@ -1,12 +1,14 @@
 import argparse
+import functools
 import logging
 import readline
+import signal
 import sys
 from typing import Sequence
 
 import blinker
 
-from .console import Console
+from .console import Console, acquire_controlling_terminal
 from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
 from .error import CommandError
@@ -36,6 +38,11 @@ class ConsoleRunner:
                             help='autoload a module for the interpreter')
         parser.add_argument('--history', default=None,
                             help='Read history from and write it to the specified file')
+        parser.add_argument('--tty', dest='tty',
+                            help='Acquire the specified TTY and use it for input and output')
+        parser.add_argument('--reconnect-on-hangup', dest='reconnect_on_hangup',
+                            action='store_true',
+                            help='Reconnect to the tty after receiving a SIGHUP signal.')
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--failsafe', action='store_true',
@@ -55,6 +62,11 @@ class ConsoleRunner:
 
     def configure(self) -> None:
         self.cli_args = self.parse_args()
+        if self.cli_args.tty:
+            acquire_tty_func = functools.partial(acquire_controlling_terminal, self.cli_args.tty)
+            if self.cli_args.reconnect_on_hangup:
+                signal.signal(signal.SIGHUP, lambda sig, frame: acquire_tty_func())
+            acquire_tty_func()
 
     def run(self) -> None:
         self.configure()
