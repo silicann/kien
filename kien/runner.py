@@ -3,7 +3,9 @@ import logging
 import readline
 import sys
 from typing import Sequence
-from blinker import signal
+
+import blinker
+
 from .console import Console
 from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
@@ -11,9 +13,9 @@ from .error import CommandError
 
 logger = logging.getLogger('eliza-runner')
 
-on_result = signal('result')
-on_dispatch = signal('dispatch')
-on_error = signal('error')
+on_result = blinker.signal('result')
+on_dispatch = blinker.signal('dispatch')
+on_error = blinker.signal('error')
 
 
 class ConsoleRunner:
