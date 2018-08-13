@@ -1,29 +1,59 @@
 # kien release changelog
 
-1. UNRELEASED
 
-1. v0.4.1
-    * FIX: raise an exception if a dependency injection failed at runtime
 
-1. v0.4.0
+## v0.8.0
+
+* FEATURE: Command keywords can be aliased from now on. See the `keyword` function.
+* FEATURE: `to_enum` transform now accepts a static map of enum to alias values. 
+           Combined with the new `keyword` function this allows for easy 
+           command aliases.  
+
+## v0.7.0
+
+* FIX:     `set echo` command now lists possible values for `STATE` variable.
+* FEATURE: The command decorator now uses the decorated function as lookup object for 
+           any unknown attributes that are referenced.
+* FEATURE: Regex decorator now supports an optional message.
+
+## v0.6.0
+
+* FIX:     Kien uses `functools.wraps` for decorators now.
+* FEATURE: Improve command suggestions for partial command matches with too few arguments
+* FEATURE: Transforms can request the transformation context with the `takes_transform_context` 
+           decorator now. This is helpful for transforms that are dependent on the result of
+           transforms that ran before.
+
+## v0.5.0
+
+* FIX:     The inject mechanism correctly handles default arguments now.
+* FIX:     If the last command didn’t carry a status code keep the one that was issued before.
+* FEATURE: Take exact argument matches into account when displaying command suggestions.
+* FEATURE: Add `on_result`, `on_dispatch` and `on_error` event hooks.
+
+## v0.4.1
+
+* FIX:     Raise an exception if a dependency injection failed at runtime.
+
+## v0.4.0
   
-   * BREAK: signature of CommandResult changed, 
-            errors should now be handled via `raise CommandError`
-   * BREAK: `Console.send_error` is no longer part of the public API. Use `send_data`
-   * FEATURE: add json output-format support
-   * FEATURE: add `--failsafe-errors` option to runner that outputs errors 
-              if `--failsafe` has been set
-   * FEATURE: enable comments prefixed with the `#` character. Comments carry the last
-              command status like they do in shells.
+* BREAK:   Signature of CommandResult changed, errors should now be handled 
+           via `raise CommandError`.
+* BREAK:   `Console.send_error` is no longer part of the public API. Use `send_data`.
+* FEATURE: Add json output-format support.
+* FEATURE: Add `--failsafe-errors` option to runner that outputs errors
+           if `--failsafe` has been set.
+* FEATURE: enable comments prefixed with the `#` character. Comments carry the last 
+           command status like they do in shells.
 
-1. v0.3.0
+## v0.3.0
   
-   * FEATURE: add `failsafe` decorator in utils module
-   * FEATURE: add `--failsafe` option to runner keeping the application from exiting
-   * FEATURE: output of a result is now terminated with two additional characters.
-              The first character is a space (0x20) or a bell (0x07) character depending
-              on the success of the command. The second is a null (0x00) character marking
-              the end of the result output.
-   * FEATURE: add `--history` option for command history support
-   * FEATURE: various improvements for integrated help command
-   * FEATURE: subclassed Runner instances now have access to the console object
+* FEATURE: Add `failsafe` decorator in utils module.
+* FEATURE: Add `--failsafe` option to runner keeping the application from exiting.
+* FEATURE: Output of a result is now terminated with two additional characters.
+           The first character is a space (`0x20`) or a bell (`0x07`) character depending
+           on the success of the command. The second is a null (`0x00`) character marking
+           the end of the result output.
+* FEATURE: Add `--history` option for command history support.
+* FEATURE: Various improvements for integrated help command.
+* FEATURE: Subclassed Runner instances now have access to the console object.
