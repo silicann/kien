@@ -21,6 +21,7 @@ kien has support for:
  * auto-generated help and documentation
  * dependency-injection
  * human-readable and json output
+ * tty handling
  
 ![Prompt example showing how the say-some-name example works in action](./docs/say-some-name-example.png)
 

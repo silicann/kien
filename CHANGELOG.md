@@ -1,6 +1,11 @@
 # kien release changelog
 
+## v0.9.0
 
+* FEATURE: The new `--tty` option accepts a device and will setup a proper terminal on it.
+           When it’s used in conjunction with the `--reconnect-on-hangup` flag it can
+           also be used for USB devices that would terminate after the `SIGHUP` process
+           signal that is emitted, after a physical USB connection has been severed. 
 
 ## v0.8.0
 
