@@ -1,8 +1,5 @@
 import curses
-import fcntl
-import io
 import json
-import os
 # merely importing readline enable command history via "input"
 # noinspection PyUnresolvedReferences
 import readline  # noqa: F401
@@ -11,8 +8,8 @@ import termios
 
 import blessings
 
-from .command.set import OutputFormat
-from .utils import strip_tags, render_tags
+from ..command.set import OutputFormat
+from ..utils import strip_tags, render_tags
 
 
 class Console:
@@ -124,42 +121,3 @@ class Console:
             else:
                 prompt = _format(self.terminal.blue, prompt)
         return prompt
-
-
-def _become_session_leader():
-    """ replicate the effect of the helper program 'setsid ...' """
-    if os.getpid() == os.getsid(0):
-        # we are already the session leader
-        pass
-    else:
-        # We need to fork in order to be able to create our own session group.
-        if os.fork() != 0:
-            # the parent process may die
-            sys.exit()
-        else:
-            os.setsid()
-
-
-def acquire_controlling_terminal(terminal_dev_path):
-    """ fork the process in order to become session leader and replace stdin/stdout/stderr 
-
-    The result should be comparable with running the program via "setsid -w agetty ...".
-    """
-    _become_session_leader()
-    # TODO: the flags are just copied from agetty's behaviour
-    dev = os.open(terminal_dev_path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
-    sys.stdin.close()
-    sys.stdout.close()
-    fcntl.ioctl(dev, termios.TIOCSCTTY, 0)
-    # duplicate the open handle to stdin and stdout
-    os.dup2(dev, 0)
-    os.dup2(dev, 1)
-    # replace the text-based stdin/stdout handles
-    sys.stdin = open(0, "rt", buffering=1)
-    sys.stdout = open(1, "wt", buffering=1)
-    # apply some useful settings for an interactive terminal
-    term_settings = termios.tcgetattr(dev)
-    # output: new line should also include a carriage return
-    term_settings[3] = term_settings[3] | termios.ONLCR
-    termios.tcsetattr(dev, termios.TCSADRAIN, term_settings)
-    os.close(dev)

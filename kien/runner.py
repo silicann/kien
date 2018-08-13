@@ -1,14 +1,13 @@
 import argparse
-import functools
 import logging
 import readline
-import signal
 import sys
 from typing import Sequence
 
 import blinker
 
-from .console import Console, acquire_controlling_terminal
+from .console import Console
+from .console.interfaces import InterfaceManager
 from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe
 from .error import CommandError
@@ -38,11 +37,9 @@ class ConsoleRunner:
                             help='autoload a module for the interpreter')
         parser.add_argument('--history', default=None,
                             help='Read history from and write it to the specified file')
-        parser.add_argument('--tty', dest='tty',
-                            help='Acquire the specified TTY and use it for input and output')
-        parser.add_argument('--reconnect-on-hangup', dest='reconnect_on_hangup',
-                            action='store_true',
-                            help='Reconnect to the tty after receiving a SIGHUP signal.')
+        parser.add_argument('--interface', dest='interfaces', action='append',
+                            help=('Bind to the given interface(s) and use these for input and '
+                                  'output'))
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--failsafe', action='store_true',
@@ -62,11 +59,19 @@ class ConsoleRunner:
 
     def configure(self) -> None:
         self.cli_args = self.parse_args()
-        if self.cli_args.tty:
-            acquire_tty_func = functools.partial(acquire_controlling_terminal, self.cli_args.tty)
-            if self.cli_args.reconnect_on_hangup:
-                signal.signal(signal.SIGHUP, lambda sig, frame: acquire_tty_func())
-            acquire_tty_func()
+        if not self.cli_args.interfaces:
+            # Default to the local terminal via stdin/stdout.
+            # Implicitly assume, that we do not need the process manager.
+            return
+        else:
+            # Handle all wanted interfaces with a process manager.
+            # allow the empty string for "use current stdin/stdout"
+            terminal_dev_specifications = set(None if iface == "" else iface
+                                              for iface in self.cli_args.interfaces)
+            interface_manager = InterfaceManager()
+            # This method call returns once with a fork for each wanted interface.
+            # The manager process itself never returns.
+            interface_manager.run(terminal_dev_specifications)
 
     def run(self) -> None:
         self.configure()
