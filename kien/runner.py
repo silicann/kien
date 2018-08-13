@@ -1,5 +1,7 @@
 import argparse
+import atexit
 import logging
+import os
 import readline
 import sys
 from typing import Sequence
@@ -17,6 +19,30 @@ logger = logging.getLogger('eliza-runner')
 on_result = blinker.signal('result')
 on_dispatch = blinker.signal('dispatch')
 on_error = blinker.signal('error')
+
+
+def initialize_pid_file(path):
+    """ create a PID file and take care, that it is safely removed when the program exits """
+    def cleanup_pid_file():
+        """ remove the PID file, if it contains the current process ID
+
+        This prevents our child processes (which inherit our exit caller via "atexit") from
+        removing the parent's PID file.
+        """
+        try:
+            with open(path, 'r') as pid_file:
+                stored_pid = int(pid_file.read())
+        except (OSError, ValueError):
+            pass
+        else:
+            if stored_pid == os.getpid():
+                try:
+                    os.unlink(path)
+                except OSError:
+                    pass
+
+    with open(path, 'w') as pid_file:
+        pid_file.write(str(os.getpid()))
 
 
 class ConsoleRunner:
@@ -40,6 +66,7 @@ class ConsoleRunner:
         parser.add_argument('--interface', dest='interfaces', action='append',
                             help=('Bind to the given interface(s) and use these for input and '
                                   'output'))
+        parser.add_argument('--pid-file', default=None, type=str, help='write process pid to file')
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--failsafe', action='store_true',
@@ -59,6 +86,11 @@ class ConsoleRunner:
 
     def configure(self) -> None:
         self.cli_args = self.parse_args()
+
+        # write pid file if requested (we assume that no later forks will happen)
+        if self.cli_args.pid_file:
+            initialize_pid_file(self.cli_args.pid_file)
+
         if not self.cli_args.interfaces:
             # Default to the local terminal via stdin/stdout.
             # Implicitly assume, that we do not need the process manager.
