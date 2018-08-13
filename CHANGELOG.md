@@ -1,5 +1,9 @@
 # kien release changelog
 
+## v0.9.1
+
+* FIX:     Force inclusion of package metadata.
+
 ## v0.9.0
 
 * FEATURE: The new `--tty` option accepts a device and will setup a proper terminal on it.
