@@ -3,8 +3,13 @@ import os
 from setuptools import find_packages, setup
 
 __dir = os.path.abspath(os.path.dirname(__file__))
-with open(os.path.join(__dir, 'README.md'), encoding='utf-8') as f:
-    long_description = '\n' + f.read()
+
+try:
+    with open(os.path.join(__dir, 'README.md'), encoding='utf-8') as f:
+        long_description = '\n' + f.read()
+except FileNotFoundError:
+    long_description = ''
+
 about = {}
 with open(os.path.join(__dir, 'kien', '__version__.py')) as f:
     exec(f.read(), about)
