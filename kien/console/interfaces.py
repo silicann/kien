@@ -84,12 +84,23 @@ class TTYInterface(BaseInterface):
         self.baudrate = baudrate
         self.is_initialized = False
         self.reconnect_on_hangup = reconnect_on_hangup
+        if self.baudrate is not None:
+            # Try to import the module early: errors in "connect" are much harder to debug, since
+            # they are running in a separate process without stderr.
+            import serial
+
+            def configure_baudrate(dev, baudrate):
+                serial.Serial(dev, baudrate).close()
+            self._configure_baudrate = configure_baudrate
 
     def connect(self):
         if not self.is_initialized:
             if self.reconnect_on_hangup:
                 # survive a SIGHUP signal, if requested (useful for USB interfaces)
                 signal.signal(signal.SIGHUP, lambda sig, frame: self.connect())
+            # configure the baudrate
+            if self.baudrate is not None:
+                self._configure_baudrate(self.path, self.baudrate)
             # execute all preparations (e.g. forking) for acquiring our terminal later on
             self._become_session_leader()
             self.is_initialized = True
