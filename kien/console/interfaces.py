@@ -183,7 +183,12 @@ class InterfaceManager:
             original_signal_handlers[one_signal] = signal.signal(one_signal, lambda *args: None)
         should_finish = False
         while not should_finish:
-            signal_info = signal.sigwaitinfo(set(original_signal_handlers))
+            try:
+                signal_info = signal.sigwaitinfo(set(original_signal_handlers))
+            except KeyboardInterrupt:
+                print("Received CTRL-C", file=sys.stderr)
+                should_finish = True
+                continue
             if signal_info.si_signo == signal.SIGTERM:
                 print("Received termination signal", file=sys.stderr)
                 should_finish = True
