@@ -23,7 +23,7 @@
 * FIX:     `set echo` command now lists possible values for `STATE` variable.
 * FEATURE: The command decorator now uses the decorated function as lookup object for 
            any unknown attributes that are referenced.
-* FEATURE: Regex decorator now supports an optional message.
+* FEATURE: `regex` validator now supports an optional message.
 
 ## v0.6.0
 
