@@ -6,33 +6,48 @@ import termios
 import urllib.parse
 
 
+def _parse_value_from_string(value, target_type):
+    if target_type is bool:
+        if value.lower() in {"0", "off", "no", "false"}:
+            return False
+        elif value.lower() in {"1", "on", "yes", "true"}:
+            return True
+        else:
+            raise ValueError
+    elif target_type is int:
+        # may raise ValueError
+        return int(value)
+    else:
+        raise NotImplementedError
+
+
 def get_interface_handler(specification):
     if specification is None:
         return LocalInterface()
     parsed = urllib.parse.urlparse(specification)
     kwargs = dict(urllib.parse.parse_qsl(parsed.query))
     if parsed.scheme == "tty":
-        for key in {"reconnect_on_hangup"}:
-            if key in kwargs:
-                try:
-                    kwargs[key] = _parse_boolean_from_string(kwargs[key])
-                except ValueError as exc:
-                    raise InvalidInterfaceSpecificationError(
-                        "Failed to parse boolean value for '{}': {}".format(key, exc))
+        parser_map = {"reconnect_on_hangup": bool, "baudrate": int}
         handler = TTYInterface
         args = (parsed.path, )
     elif parsed.scheme == "telnet":
+        parser_map = {"port": int}
         if ":" in parsed.path:
-            host, port_string = parsed.path.split(":", 1)
-            try:
-                kwargs["port"] = int(port_string)
-            except ValueError:
-                raise InvalidInterfaceSpecificationError("Failed to parse numeric port: {}"
-                                                         .format(port_string))
+            host, kwargs["port"] = parsed.path.split(":", 1)
         else:
             host = parsed.path
         handler = TelnetInterface
         args = (host, )
+    # parse and convert values
+    for key, target_type in parser_map.items():
+        if key in kwargs:
+            try:
+                kwargs[key] = _parse_value_from_string(kwargs[key], target_type)
+            except ValueError as exc:
+                raise InvalidInterfaceSpecificationError(
+                    "Failed to identify {} value of '{}': {}"
+                    .format(target_type.__name__, key, kwargs[key]))
+    # create an instance of the handler
     try:
         return handler(*args, **kwargs)
     except TypeError as exc:
@@ -42,15 +57,6 @@ def get_interface_handler(specification):
 
 class InvalidInterfaceSpecificationError(Exception):
     """ Indicate an invalid terminal specification (e.g. unknown scheme or missing arguments) """
-
-
-def _parse_boolean_from_string(text):
-    if text.lower() in {"0", "off", "no", "false"}:
-        return False
-    elif text.lower() in {"1", "on", "yes", "true"}:
-        return True
-    else:
-        raise ValueError("failed to identify boolean value of '{}'".format(text))
 
 
 class BaseInterface:
