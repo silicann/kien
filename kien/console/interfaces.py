@@ -165,13 +165,14 @@ class InterfaceManager:
     def __init__(self):
         self.running_interface_processes = {}
 
-    def run(self, wanted_interfaces):
+    def run(self, wanted_interfaces, enable_child_process_log_files=False):
         """ fork processes for each wanted interface
 
         This function returns for the child processes (i.e.: they may continue using stdin/stdout).
         The parent process (the interface manager) stays alive and never returns.
         """
-        if not self.run_and_stop_interfaces(wanted_interfaces):
+        if not self.run_and_stop_interfaces(
+                wanted_interfaces, enable_child_process_log_files=enable_child_process_log_files):
             # we are a managed interface process - simply return
             return
         # we are the manager
@@ -220,7 +221,7 @@ class InterfaceManager:
         self.run_and_stop_interfaces(set())
         sys.exit(0)
 
-    def run_and_stop_interfaces(self, wanted_interfaces):
+    def run_and_stop_interfaces(self, wanted_interfaces, enable_child_process_log_files=False):
         """ kill old processes or start new ones
 
         @param wanted_interfaces: list of text-based interface specifications
@@ -257,6 +258,8 @@ class InterfaceManager:
                 # Release the (shared) error output file.
                 os.close(2)
                 sys.stderr.close()
+                if enable_child_process_log_files:
+                    sys.stderr = open("kien-{}.log".format(os.getpid()), "wt")
                 # connect to our target interface
                 handler.connect()
                 # there is nothing more to be prepared by us - the logic handler may take over
