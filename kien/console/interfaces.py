@@ -94,23 +94,21 @@ class TTYInterface(BaseInterface):
             # Try to import the module early: errors in "connect" are much harder to debug, since
             # they are running in a separate process without stderr.
             import serial
-
-            def configure_baudrate(dev, baudrate):
-                serial.Serial(dev, baudrate).close()
-            self._configure_baudrate = configure_baudrate
+            try:
+                self.baudrate_tcattr_value = serial.Serial.BAUDRATE_CONSTANTS[self.baudrate]
+            except KeyError:
+                InvalidInterfaceSpecificationError("Non-standard baudrates are not supported: {}"
+                                                   .format(self.baudrate))
 
     def connect(self):
         if not self.is_initialized:
             if self.reconnect_on_hangup:
                 # survive a SIGHUP signal, if requested (useful for USB interfaces)
                 signal.signal(signal.SIGHUP, lambda sig, frame: self.connect())
-            # configure the baudrate
-            if self.baudrate is not None:
-                self._configure_baudrate(self.path, self.baudrate)
             # execute all preparations (e.g. forking) for acquiring our terminal later on
             self._become_session_leader()
             self.is_initialized = True
-        self._acquire_controlling_terminal(self.path)
+        self._acquire_controlling_terminal()
 
     def close(self):
         sys.stdin.close()
@@ -129,14 +127,13 @@ class TTYInterface(BaseInterface):
             else:
                 os.setsid()
 
-    @classmethod
-    def _acquire_controlling_terminal(cls, terminal_dev_path):
+    def _acquire_controlling_terminal(self):
         """ fork the process in order to become session leader and replace stdin/stdout/stderr
 
         The result should be comparable with running the program via "setsid -w agetty ...".
         """
         # TODO: the flags are just copied from agetty's behaviour
-        dev = os.open(terminal_dev_path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
+        dev = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
         sys.stdin.close()
         sys.stdout.close()
         fcntl.ioctl(dev, termios.TIOCSCTTY, 0)
@@ -150,6 +147,9 @@ class TTYInterface(BaseInterface):
         term_settings = termios.tcgetattr(dev)
         # output: new line should also include a carriage return
         term_settings[3] = term_settings[3] | termios.ONLCR
+        if self.baudrate is not None:
+            term_settings[4] = self.baudrate_tcattr_value
+            term_settings[5] = self.baudrate_tcattr_value
         termios.tcsetattr(dev, termios.TCSADRAIN, term_settings)
         os.close(dev)
 
