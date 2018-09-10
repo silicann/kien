@@ -265,13 +265,13 @@ class InterfaceManager:
                 # Release the (shared) error output file.
                 os.close(2)
                 sys.stderr.close()
+                # connect to our target interface
+                handler.connect()
                 # optionally redirect stderr for logging
                 if log_filename_by_process:
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
                     print("Spawned process {} for interface: {}".format(os.getpid(), handler),
                           file=sys.stderr)
-                # connect to our target interface
-                handler.connect()
                 # there is nothing more to be prepared by us - the logic handler may take over
                 return False
             else:
