@@ -75,6 +75,10 @@ class ConsoleRunner:
         parser.add_argument('--pid-file', default=None, type=str, help='write process pid to file')
         parser.add_argument('--log-level', dest='log_level', choices=tuple(LOG_LEVELS),
                             default='warning', help='select log verbosity')
+        parser.add_argument('--log-filename-by-process', dest='log_filename_by_process', type=str,
+                            help=('Store log messages of forked child processes in separate files '
+                                  '(e.g. "/var/log/kien/process-%d.log"). '
+                                  'Log storage per process is disabled by default.'))
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--failsafe', action='store_true',
@@ -112,7 +116,8 @@ class ConsoleRunner:
             interface_manager = InterfaceManager()
             # This method call returns once with a fork for each wanted interface.
             # The manager process itself never returns.
-            interface_manager.run(terminal_dev_specifications)
+            interface_manager.run(terminal_dev_specifications,
+                                  log_filename_by_process=self.cli_args.log_filename_by_process)
 
     def run(self) -> None:
         self.configure()

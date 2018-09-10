@@ -82,6 +82,9 @@ class LocalInterface(BaseInterface):
     def close(self):
         pass
 
+    def __str__(self):
+        return ("Local")
+
 
 class TTYInterface(BaseInterface):
 
@@ -153,6 +156,10 @@ class TTYInterface(BaseInterface):
         termios.tcsetattr(dev, termios.TCSADRAIN, term_settings)
         os.close(dev)
 
+    def __str__(self):
+        return ("TTY (dev={}, baudrate={:d}, reconnect_on_hangup={})"
+                .format(self.path, self.baudrate, self.reconnect_on_hangup))
+
 
 class TelnetInterface(BaseInterface):
 
@@ -165,14 +172,14 @@ class InterfaceManager:
     def __init__(self):
         self.running_interface_processes = {}
 
-    def run(self, wanted_interfaces, enable_child_process_log_files=False):
+    def run(self, wanted_interfaces, log_filename_by_process=None):
         """ fork processes for each wanted interface
 
         This function returns for the child processes (i.e.: they may continue using stdin/stdout).
         The parent process (the interface manager) stays alive and never returns.
         """
         if not self.run_and_stop_interfaces(
-                wanted_interfaces, enable_child_process_log_files=enable_child_process_log_files):
+                wanted_interfaces, log_filename_by_process=log_filename_by_process):
             # we are a managed interface process - simply return
             return
         # we are the manager
@@ -221,12 +228,12 @@ class InterfaceManager:
         self.run_and_stop_interfaces(set())
         sys.exit(0)
 
-    def run_and_stop_interfaces(self, wanted_interfaces, enable_child_process_log_files=False):
+    def run_and_stop_interfaces(self, wanted_interfaces, log_filename_by_process=None):
         """ kill old processes or start new ones
 
         @param wanted_interfaces: list of text-based interface specifications
-        @param running_interfaces: dictionary of text-based interface specifications and the
-            process IDs of the process providing this interface currently
+        @param log_filename_by_process: filename template (including "%d" for the PID) to be used
+            as a location for storing log message of all child processes. Disabled if undefined.
         """
         running_set = set(self.running_interface_processes)
         obsolete_interfaces = running_set.difference(wanted_interfaces)
@@ -258,8 +265,11 @@ class InterfaceManager:
                 # Release the (shared) error output file.
                 os.close(2)
                 sys.stderr.close()
-                if enable_child_process_log_files:
-                    sys.stderr = open("kien-{}.log".format(os.getpid()), "wt")
+                # optionally redirect stderr for logging
+                if log_filename_by_process:
+                    sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
+                    print("Spawned process {} for interface: {}".format(os.getpid(), handler),
+                          file=sys.stderr)
                 # connect to our target interface
                 handler.connect()
                 # there is nothing more to be prepared by us - the logic handler may take over
