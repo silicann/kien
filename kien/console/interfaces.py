@@ -277,7 +277,9 @@ class InterfaceManager:
                 # optionally redirect stderr for logging
                 if log_filename_by_process:
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
-                    self.logger.info("Spawned process %d for interface: %s", os.getpid(), handler)
+                # our logging handler also influences the logging handler of the interface
+                self.reconfigure_logging()
+                self.logger.info("Spawned process %d for interface: %s", os.getpid(), handler)
                 # there is nothing more to be prepared by us - the logic handler may take over
                 return False
             else:
@@ -285,3 +287,14 @@ class InterfaceManager:
                 self.running_interface_processes[spec] = child_pid
         # only the parent ends up here
         return True
+
+    def reconfigure_logging(self):
+        """ remove all existing log handlers and add a stream handler to stderr (if open) """
+        for handler in self.logger.handlers:
+            self.logger.removeHandler(handler)
+        if sys.stderr.closed:
+            # there is no output target available - do nothing
+            pass
+        else:
+            new_handler = logging.StreamHandler(sys.stderr)
+            self.logger.addHandler(new_handler)
