@@ -113,7 +113,7 @@ class ConsoleRunner:
             # allow the empty string for "use current stdin/stdout"
             terminal_dev_specifications = set(None if iface == "" else iface
                                               for iface in self.cli_args.interfaces)
-            interface_manager = InterfaceManager()
+            interface_manager = InterfaceManager(logger)
             # This method call returns once with a fork for each wanted interface.
             # The manager process itself never returns.
             interface_manager.run(terminal_dev_specifications,
