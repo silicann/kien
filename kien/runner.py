@@ -1,5 +1,4 @@
 import argparse
-import atexit
 import logging
 import os
 import readline
@@ -19,6 +18,13 @@ logger = logging.getLogger('eliza-runner')
 on_result = blinker.signal('result')
 on_dispatch = blinker.signal('dispatch')
 on_error = blinker.signal('error')
+
+LOG_LEVELS = {
+    "debug": logging.DEBUG,
+    "info": logging.INFO,
+    "warning": logging.WARNING,
+    "error": logging.ERROR,
+}
 
 
 def initialize_pid_file(path):
@@ -67,6 +73,8 @@ class ConsoleRunner:
                             help=('Bind to the given interface(s) and use these for input and '
                                   'output'))
         parser.add_argument('--pid-file', default=None, type=str, help='write process pid to file')
+        parser.add_argument('--log-level', dest='log_level', choices=tuple(LOG_LEVELS),
+                            default='warning', help='select log verbosity')
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
         parser.add_argument('--failsafe', action='store_true',
@@ -86,6 +94,7 @@ class ConsoleRunner:
 
     def configure(self) -> None:
         self.cli_args = self.parse_args()
+        logger.setLevel(LOG_LEVELS[self.cli_args.log_level])
 
         # write pid file if requested (we assume that no later forks will happen)
         if self.cli_args.pid_file:
