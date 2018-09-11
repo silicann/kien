@@ -13,14 +13,33 @@ from ..utils import strip_tags, render_tags
 
 
 class Console:
+
     def __init__(self, output, prompt='> ', output_format=OutputFormat.HUMAN):
-        self.output = output
+        """ initialize a console environment
+
+        @param output: output file (e.g. sys.stdin) or callable returning such a file
+        @param prompt: the prompt string to be output in front of every line (with "echo" enabled)
+        @param output_format: the initial output format to be used by the interface
+        """
+        self._given_output = output
         self._prompt = prompt
         self._show_echo = True
         self.terminal = None  # type: blessings.Terminal
         self.linesep = "\n\r"
         self.select_output_format(output_format)
         self._last_status = 0
+
+    @property
+    def output(self):
+        """ allow the use of a callable as an "output" source
+
+        This ability is relevant for files, that may be replaced during runtime (e.g. disconnected
+        USB gadget host).
+        """
+        if callable(self._given_output):
+            return self._given_output()
+        else:
+            return self._given_output
 
     def __enter__(self):
         """ store the original settings of the terminal """

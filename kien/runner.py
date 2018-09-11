@@ -122,7 +122,7 @@ class ConsoleRunner:
     def run(self) -> None:
         self.configure()
 
-        with Console(sys.stdout, prompt=self.prompt) as console:
+        with Console(lambda: sys.stdout, prompt=self.prompt) as console:
             console.configure_auto(force_disable_style=self.cli_args.disable_style)
             if self.commander is None:
                 raise RuntimeError('You must configure a commander before starting run')
