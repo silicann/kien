@@ -1,6 +1,7 @@
 from collections import namedtuple, Iterable, UserString
 from functools import wraps
 import importlib
+import logging
 import os
 import inspect
 import time
@@ -298,3 +299,15 @@ def failsafe(exc_type=Exception, enable=True, callback=None):
                 return func(*args, **kwargs)
         return wrapper
     return decorator
+
+
+class FragileStreamHandler(logging.StreamHandler):
+    """ simple wrapper around StreamHandler that handles broken output targets gracefully
+
+    This is relevant for interfaces, that may disconnect at any time (e.g. a USB gadget interface).
+    Here we need to ignore logging errors.
+    """
+
+    def handleError(self, record):
+        # silently ignore logging errors
+        pass

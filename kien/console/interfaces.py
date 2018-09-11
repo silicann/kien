@@ -1,10 +1,12 @@
 import fcntl
-import logging
 import os
 import signal
 import sys
 import termios
 import urllib.parse
+
+
+from ..utils import FragileStreamHandler
 
 
 def _parse_value_from_string(value, target_type):
@@ -296,5 +298,4 @@ class InterfaceManager:
             # there is no output target available - do nothing
             pass
         else:
-            new_handler = logging.StreamHandler(sys.stderr)
-            self.logger.addHandler(new_handler)
+            self.logger.addHandler(FragileStreamHandler(sys.stderr))
