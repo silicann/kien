@@ -111,13 +111,16 @@ class TTYInterface(BaseInterface):
                                                    .format(self.baudrate))
 
     def connect(self):
+        def _sighup_handler(sig, frame):
+            self.logger.info("Received SIGHUP: reconnecting to %s", self)
+            self.connect()
         if not self.is_initialized:
             # execute all preparations (e.g. forking) for acquiring our terminal later on
             self._become_session_leader()
             if self.reconnect_on_hangup:
                 # survive a SIGHUP signal, if requested (useful for USB interfaces)
                 self.logger.info("Registring SIGHUP handler for reconnect")
-                signal.signal(signal.SIGHUP, lambda sig, frame: self.connect())
+                signal.signal(signal.SIGHUP, _sighup_handler)
             self.is_initialized = True
         self._acquire_controlling_terminal()
 
