@@ -1,5 +1,18 @@
 # kien release changelog
 
+## v0.11.0
+
+* FEATURE: Add "--log-level" commandline parameter.
+* FEATURE: Add "--log-filename-by-process" commandline parameter.
+* FIX:     Improve various details of SIGHUP (disconnect/connect) handling.
+
+## v0.10.0
+
+* FEATURE: Manage connections on different interfaces with a single startup process
+           (spawning forked processes for each interface).
+* FEATURE: Add support for writing and remove a PID file.
+* FEATURE: Allow configuration of baudrate.
+
 ## v0.9.1
 
 * FIX:     Force inclusion of package metadata.
