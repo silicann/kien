@@ -10,7 +10,7 @@ import blinker
 from .console import Console
 from .console.interfaces import InterfaceManager
 from .events import ConsoleExitEvent, StopProcessingEvent
-from .utils import autoload, failsafe
+from .utils import autoload, failsafe, FragileStreamHandler
 from .error import CommandError
 
 logger = logging.getLogger('eliza-runner')
@@ -99,6 +99,7 @@ class ConsoleRunner:
     def configure(self) -> None:
         self.cli_args = self.parse_args()
         logger.setLevel(LOG_LEVELS[self.cli_args.log_level])
+        logger.addHandler(FragileStreamHandler(sys.stderr))
 
         # write pid file if requested (we assume that no later forks will happen)
         if self.cli_args.pid_file:
