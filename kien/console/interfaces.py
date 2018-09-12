@@ -147,17 +147,22 @@ class TTYInterface(BaseInterface):
         The result should be comparable with running the program via "setsid -w agetty ...".
         """
         # TODO: the flags are just copied from agetty's behaviour
+        self.logger.debug("Opening target terminal: %s", self.path)
         dev = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
+        self.logger.debug("Closing stdin and stdout")
         sys.stdin.close()
         sys.stdout.close()
+        self.logger.debug("Disabling controlling terminal")
         fcntl.ioctl(dev, termios.TIOCSCTTY, 0)
         # duplicate the open handle to stdin and stdout
+        self.logger.debug("Assigning terminal to stdin and stdout")
         os.dup2(dev, 0)
         os.dup2(dev, 1)
         # replace the text-based stdin/stdout handles
         sys.stdin = open(0, "rt", buffering=1)
         sys.stdout = open(1, "wt", buffering=1)
         # apply some useful settings for an interactive terminal
+        self.logger.debug("Applying interactive terminal settings")
         term_settings = termios.tcgetattr(dev)
         # output: new line should also include a carriage return
         term_settings[3] = term_settings[3] | termios.ONLCR
@@ -251,6 +256,9 @@ class InterfaceManager:
         running_set = set(self.running_interface_processes)
         obsolete_interfaces = running_set.difference(wanted_interfaces)
         new_wanted_interfaces = wanted_interfaces.difference(running_set)
+        if obsolete_interfaces:
+            self.logger.info("Terminating processes of obsolete interfaces: %s",
+                             obsolete_interfaces)
         # kill obsolete child processes
         for obsolete in obsolete_interfaces:
             child_pid = self.running_interface_processes.pop(obsolete)
@@ -260,6 +268,8 @@ class InterfaceManager:
                 self.logger.warning("Failed to kill obsolete child process: %d (%s)",
                                     child_pid, obsolete)
         # parse the specifications first (reduced risk of leaving a broken mess)
+        if new_wanted_interfaces:
+            self.logger.info("Starting processes for new interfaces: %s", new_wanted_interfaces)
         interface_handlers = {}
         for new_spec in new_wanted_interfaces:
             try:
@@ -296,6 +306,7 @@ class InterfaceManager:
 
     def reconfigure_logging(self):
         """ remove all existing log handlers and add a stream handler to stderr (if open) """
+        self.logger.debug("Reconfiguring logging")
         for handler in self.logger.handlers:
             self.logger.removeHandler(handler)
         if sys.stderr.closed:
@@ -303,3 +314,4 @@ class InterfaceManager:
             pass
         else:
             self.logger.addHandler(FragileStreamHandler(sys.stderr))
+        self.logger.debug("Finished reconfiguring logging")
