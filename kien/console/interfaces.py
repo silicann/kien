@@ -150,8 +150,14 @@ class TTYInterface(BaseInterface):
         self.logger.debug("Opening target terminal: %s", self.path)
         dev = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
         self.logger.debug("Closing stdin and stdout")
-        sys.stdin.close()
-        sys.stdout.close()
+        for handle in (sys.stdin, sys.stdout):
+            try:
+                handle.close()
+            except OSError:
+                # For unknown reasons this seems to happen for stdout from time to time.
+                # How to reproduce: disconnect the USB peer in a USB gadget setup for a short very
+                # period.
+                self.logger.info("Failed to close handle: %s", handle)
         self.logger.debug("Disabling controlling terminal")
         fcntl.ioctl(dev, termios.TIOCSCTTY, 0)
         # duplicate the open handle to stdin and stdout
@@ -286,8 +292,11 @@ class InterfaceManager:
             if child_pid == 0:
                 # we are the child
                 # Release the (shared) error output file.
-                os.close(2)
                 sys.stderr.close()
+                try:
+                    os.close(2)
+                except OSError:
+                    pass
                 sys.stderr = open(os.path.devnull, "wt")
                 # connect to our target interface
                 handler.connect()
