@@ -288,10 +288,12 @@ class InterfaceManager:
                 # Release the (shared) error output file.
                 os.close(2)
                 sys.stderr.close()
+                sys.stderr = open(os.path.devnull, "wt")
                 # connect to our target interface
                 handler.connect()
                 # optionally redirect stderr for logging
                 if log_filename_by_process:
+                    sys.stderr.close()
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
                 # our logging handler also influences the logging handler of the interface
                 self.reconfigure_logging()
