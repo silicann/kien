@@ -1,5 +1,10 @@
 # kien release changelog
 
+## v0.11.1
+
+* FIX:     `regex` validator will always match the full string
+           (replaced `re.match` with `re.fullmatch`)
+
 ## v0.11.0
 
 * FEATURE: Add "--log-level" commandline parameter.
