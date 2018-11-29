@@ -49,13 +49,13 @@ def get_interface_handler(specification, logger):
             except ValueError as exc:
                 raise InvalidInterfaceSpecificationError(
                     "Failed to identify {} value of '{}': {}"
-                    .format(target_type.__name__, key, kwargs[key]))
+                    .format(target_type.__name__, key, kwargs[key])) from exc
     # create an instance of the handler
     try:
         return handler(logger, *args, **kwargs)
     except TypeError as exc:
         raise InvalidInterfaceSpecificationError("Failed to instantiate terminal handler ({}): {}"
-                                                 .format(handler.__class__.__name__, exc))
+                                                 .format(handler.__class__.__name__, exc)) from exc
 
 
 class InvalidInterfaceSpecificationError(Exception):
@@ -270,7 +270,7 @@ class InterfaceManager:
             child_pid = self.running_interface_processes.pop(obsolete)
             try:
                 os.kill(child_pid, signal.SIGTERM)
-            except OSError as exc:
+            except OSError:
                 self.logger.warning("Failed to kill obsolete child process: %d (%s)",
                                     child_pid, obsolete)
         # parse the specifications first (reduced risk of leaving a broken mess)
