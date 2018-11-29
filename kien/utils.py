@@ -77,7 +77,7 @@ def columns(separator='\t', join_char=None):
             yield column.ljust(column_widths[index])
 
     def decorator(func):
-        @join_generator_string()
+        @join_generator_string(formatter=str.rstrip)
         @wraps(func)
         def wrapper(*args, **kwargs):
             rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
