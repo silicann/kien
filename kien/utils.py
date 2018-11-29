@@ -8,7 +8,7 @@ import time
 import math
 import re
 import shlex
-from typing import Sequence
+from typing import Sequence, Callable
 import blessings
 from .events import StopProcessingEvent
 
@@ -44,12 +44,18 @@ def is_or_extends(item, cls):
     return issubclass(item_type, cls)
 
 
-def join_generator_string(glue=os.linesep):
+def join_generator_string(glue: str = os.linesep, formatter: Callable = None):
+    def _format(value):
+        if formatter is None:
+            return str(value)
+        return formatter(str(value))
+
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            return glue.join(result) if isinstance(result, Iterable) else str(result)
+            return glue.join(map(_format, result)) if isinstance(result, Iterable) \
+                else _format(result)
         return wrapper
     return decorator
 
