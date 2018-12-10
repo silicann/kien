@@ -2,7 +2,7 @@ import collections
 from functools import update_wrapper, wraps
 import itertools
 import re
-from typing import Hashable, Iterable, Mapping
+from typing import Callable, Hashable, Iterable, Mapping, Pattern
 
 from .validation import validate_value, one_of
 
@@ -112,14 +112,25 @@ def to_bool(value, choices=(TRUE_CHOICES, FALSE_CHOICES)):
 
 
 @simple_transformator
-def from_regex(expr, value, convert_to=tuple):
+def from_regex(expr: Pattern, value: str, convert_to: Callable = tuple):
+    """
+    Takes a regular expression and converts named groups to **kwargs and
+    unnamed groups to *args and calls convert_to with them.
+
+    :param expr: the regular expression that will be used to match value
+    :param value: the value the arguments should be extracted from
+    :param convert_to: the callable that receives *args and **kwargs
+    :return:
+    """
     match = re.match(expr, value)
 
     args, kwargs = [], {}
+    # when calling .group() the index 0 always returns the full match
+    # the actual user defined groups are stored for index 1 - n
     for index in range(1, match.re.groups + 1):
-        args.append(match[index])
+        args.append(match.group(index))
     for group, index in match.re.groupindex.items():
-        kwargs[group] = match[index]
+        kwargs[group] = match.group(index)
 
     return convert_to(*args, **kwargs)
 
