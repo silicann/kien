@@ -100,7 +100,7 @@ def simple_transformator(func):
 
 
 @simple_transformator
-def to_bool(value, choices={TRUE_CHOICES, FALSE_CHOICES}):
+def to_bool(value, choices=(TRUE_CHOICES, FALSE_CHOICES)):
     true_values, false_values = choices
     validate_value(one_of(true_values + false_values), value)
     if value in true_values:
