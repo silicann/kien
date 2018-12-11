@@ -200,7 +200,7 @@ def length(value, min=None, max=None, exact=None):
 @simple_validator
 def one_of(choices, value):
     if value not in choices:
-        raise ValidationError('must be one of: %s' % ', '.join(map(str, choices)))
+        raise ValidationError('must be one of: %s' % ', '.join(sorted(map(str, choices))))
 
 
 @simple_validator
