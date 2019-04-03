@@ -5,6 +5,7 @@ import json
 import readline  # noqa: F401
 import sys
 import termios
+import tty
 
 import blessings
 
@@ -65,9 +66,9 @@ class Console:
         if self._original_console_attributes is not None:
             attributes = termios.tcgetattr(self.output)
             if enabled:
-                attributes[3] |= termios.ECHO
+                attributes[tty.LFLAG] |= termios.ECHO
             else:
-                attributes[3] &= ~termios.ECHO
+                attributes[tty.LFLAG] &= ~termios.ECHO
             tcsetattr_flags = termios.TCSAFLUSH
             if hasattr(termios, 'TCSASOFT'):
                 tcsetattr_flags |= termios.TCSASOFT
