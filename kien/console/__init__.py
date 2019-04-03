@@ -1,8 +1,10 @@
 import curses
+import fcntl
 import json
 # merely importing readline enable command history via "input"
 # noinspection PyUnresolvedReferences
 import readline  # noqa: F401
+import struct
 import sys
 import termios
 import tty
@@ -11,6 +13,12 @@ import blessings
 
 from ..command.set import OutputFormat
 from ..utils import strip_tags, render_tags
+
+# The size of unsigned short is platform-dependent, but guaranteed to be at least 2 bytes.
+# As struct.pack seems to enforce portability across architectures, we use a value
+# that is always going to fit in that.
+UNSIGNED_SHORT_MAX = 65535
+TERMINAL_SIZE_MAX = struct.pack('HHHH', UNSIGNED_SHORT_MAX, UNSIGNED_SHORT_MAX, 0, 0)
 
 
 class Console:
@@ -49,6 +57,15 @@ class Console:
         except termios.error:
             # it may fail for piped output
             self._original_console_attributes = None
+        # Increase window size as seen from the kernel to its maximum value.
+        # This will prevent the canonical line editor from inserting a \r character
+        # (carriage return) after it reached the window with, causing the line not to wrap, but
+        # to overwrite any input that already has been provided (technically it’s not overwritten,
+        # as the input buffer will still append new data, but that is not entirely transparent
+        # to the user). At the point of this change this did not seem to cause any problems
+        # with the clients on the other end, as they simply wrap the canonical editor line into the
+        # next line which is, in contrast to the inserted carriage return, exactly what we want.
+        fcntl.ioctl(self.output, termios.TIOCSWINSZ, TERMINAL_SIZE_MAX)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
