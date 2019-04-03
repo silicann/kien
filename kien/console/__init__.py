@@ -26,7 +26,7 @@ class Console:
         self._prompt = prompt
         self._show_echo = True
         self.terminal = None  # type: blessings.Terminal
-        self.linesep = "\n\r"
+        self.linesep = '\n'
         self.select_output_format(output_format)
         self._last_status = 0
 
