@@ -3,6 +3,7 @@ import os
 import signal
 import sys
 import termios
+import tty
 import urllib.parse
 
 
@@ -171,7 +172,7 @@ class TTYInterface(BaseInterface):
         self.logger.debug("Applying interactive terminal settings")
         term_settings = termios.tcgetattr(dev)
         # output: new line should also include a carriage return
-        term_settings[3] = term_settings[3] | termios.ONLCR
+        term_settings[tty.LFLAG] |= termios.ONLCR
         if self.baudrate is not None:
             term_settings[4] = self.baudrate_tcattr_value
             term_settings[5] = self.baudrate_tcattr_value
