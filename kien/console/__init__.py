@@ -22,7 +22,6 @@ TERMINAL_SIZE_MAX = struct.pack('HHHH', UNSIGNED_SHORT_MAX, UNSIGNED_SHORT_MAX, 
 
 
 class Console:
-
     def __init__(self, output, prompt='> ', output_format=OutputFormat.HUMAN):
         """ initialize a console environment
 
@@ -104,8 +103,8 @@ class Console:
             self.terminal = None
 
     def linefeed(self):
-        if self._show_echo:
-            print(file=self.output, end=self.linesep)
+        if self._output_format is OutputFormat.HUMAN:
+            print(file=self.output, end=self.linesep, flush=True)
 
     def _format_output(self, s):
         if self.terminal and self.terminal.number_of_colors:
@@ -135,8 +134,9 @@ class Console:
             })
 
         self._last_status = status
-        end = ('\x20' if result.success else '\x07') + '\0' + self.linesep
-        print(content, file=self.output, end=end)
+        end = ('\x20' if result.success else '\x07') + '\0'
+        print(content, file=self.output, end=end, flush=True)
+        self.linefeed()
 
     def get_prompt(self):
         if self._output_format == OutputFormat.HUMAN and self._show_echo:
