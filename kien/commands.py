@@ -655,8 +655,8 @@ def _normalize_injections(injections) -> List[_Injection]:
     if isinstance(injections, dict):
         for inject_as, value in injections.items():
             if isinstance(value, _Injection):
-                value.key = value.inject_as = inject_as
-                result.append(require(value.key, inject_as, collect=value.collect))
+                value.inject_as = inject_as
+                result.append(value)
             else:
                 value, collect = normalize_require(value)
                 result.append(require(value, inject_as, collect))
