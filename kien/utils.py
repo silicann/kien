@@ -111,25 +111,24 @@ def throttle(frequency=None, limit=None):
     """
     frequency = math.inf if frequency is None else frequency
     calls_per_second = 1 / frequency
-    # because variable scopes in python are pretty much useless for closures
-    # we’re using single-element lists here
-    last_call = [None]
-    call_count = [0]
+    last_call = None
+    call_count = 0
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
+            nonlocal last_call, call_count
             current_time = time.time()
-            if last_call[0] is None or last_call[0] + calls_per_second < current_time:
-                last_call[0] = current_time
-                call_count[0] += 1
+            if last_call is None or last_call + calls_per_second < current_time:
+                last_call = current_time
+                call_count += 1
                 result = func(*args, **kwargs)
                 if inspect.isgenerator(result):
                     yield from result
                 else:
                     yield result
 
-            if call_count[0] == limit:
+            if call_count == limit:
                 raise throttle.Stop()
         return wrapper
     return decorator
