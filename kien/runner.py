@@ -13,7 +13,7 @@ from .events import ConsoleExitEvent, StopProcessingEvent
 from .utils import autoload, failsafe, FragileStreamHandler, CommandExecutionContext
 from .error import CommandError, ShouldThrottleException
 
-logger = logging.getLogger('eliza-runner')
+logger = logging.getLogger('keen-runner')
 
 on_result = blinker.signal('result')
 on_dispatch = blinker.signal('dispatch')
