@@ -77,7 +77,7 @@ class ConsoleRunner:
                             default='warning', help='select log verbosity')
         parser.add_argument('--log-filename-by-process', dest='log_filename_by_process', type=str,
                             help=('Store log messages of forked child processes in separate files '
-                                  '(e.g. "/var/log/kien/process-%d.log"). '
+                                  '(e.g. "/var/log/kien/process-%%d.log"). '
                                   'Log storage per process is disabled by default.'))
         parser.add_argument('--ignore-eof', dest='ignore_eof', action='store_true',
                             help='Ignore the EOF control character (commonly: CTRL-D)')
