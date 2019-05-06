@@ -521,6 +521,9 @@ def create_commander(name, description=None):
             pass
 
         def __exit__(self, *exc):
+            self.destroy()
+
+        def destroy(self):
             if self.key not in context:
                 return
             if self.obj is context[self.key][0]:
