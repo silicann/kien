@@ -1,4 +1,8 @@
-class CommandError(RuntimeError):
+class KienError(Exception):
+    pass
+
+
+class CommandError(KienError, RuntimeError):
     """ raised if an error occurred while executing a command """
 
     def __init__(self, message, data=None, status=1, code=None) -> None:
