@@ -10,8 +10,8 @@ import blinker
 from .console import Console
 from .console.interfaces import InterfaceManager
 from .events import ConsoleExitEvent, StopProcessingEvent
-from .error import CommandError
 from .utils import autoload, failsafe, FragileStreamHandler, CommandExecutionContext
+from .error import CommandError, ShouldThrottleException
 
 logger = logging.getLogger('eliza-runner')
 
@@ -190,6 +190,13 @@ class ConsoleRunner:
                         with context:
                             on_result.send(self, result=result)
                             console.send_data(result)
+            except ShouldThrottleException as exc:
+                logger.error('The output interface could not write data fast enough and the '
+                             'command sending the data didn’t implement a back-pressure '
+                             'mechanism to decrease the data flow. The command was aborted.',
+                             exc_info=exc)
+                on_error.send(self, exc=exc)
+                console.send_data(exc)
             except CommandError as exc:
                 on_error.send(self, exc=exc)
                 console.send_data(exc)

@@ -23,3 +23,17 @@ class ItemNotFoundError(CommandError):
 
 class InjectionError(CommandError):
     """ raised if a dependency injection failed """
+
+
+class ShouldThrottleException(CommandError):
+    """
+    Raised if the transport interface was unable to write data fast enough
+    and raised a BlockingIOError. The command generating the data should
+    reduce its output.
+    """
+
+    def __init__(self) -> None:
+        super().__init__('The command was aborted because the output interface '
+                         'was unable to write data fast enough. Please choose '
+                         'an interface with higher throughput like USB if available.',
+                         None, 1, 'KIEN.interface.data_overflow')

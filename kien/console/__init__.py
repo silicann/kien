@@ -13,6 +13,7 @@ import blessings
 
 from ..command.set import OutputFormat
 from ..utils import strip_tags, render_tags
+from ..error import ShouldThrottleException
 
 # The size of unsigned short is platform-dependent, but guaranteed to be at least 2 bytes.
 # As struct.pack seems to enforce portability across architectures, we use a value
@@ -135,8 +136,12 @@ class Console:
 
         self._last_status = status
         end = ('\x20' if result.success else '\x07') + '\0'
-        print(content, file=self.output, end=end, flush=True)
-        self.linefeed()
+
+        try:
+            print(content, file=self.output, end=end, flush=True)
+            self.linefeed()
+        except BlockingIOError as exc:
+            raise ShouldThrottleException() from exc
 
     def get_prompt(self):
         if self._output_format == OutputFormat.HUMAN and self._show_echo:
