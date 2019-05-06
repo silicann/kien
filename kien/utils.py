@@ -302,6 +302,7 @@ def failsafe(exc_type=Exception, enable=True, callback=None):
     :param callback: an optional callback for processing and on-failure return value
     """
     def decorator(func):
+        @wraps(func)
         def wrapper(*args, **kwargs):
             if enable:
                 try:
