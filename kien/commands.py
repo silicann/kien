@@ -470,10 +470,11 @@ class _Injection:
             default = self._get_default(func)
             if default is _Undefined:
                 raise InjectionError(
-                    'Dependency "{source}" injected as "{name}" was not provided at runtime. '
-                    'Did you forget to call `command.provide("{source}", foo)` '
+                    'Dependency {source} injected as "{name}" was not provided at runtime. '
+                    'Did you forget to call `command.provide({source}, foo)` '
                     'at some point or to set a default value?'.format(
-                        name=self.inject_as, source=self.key)
+                        source='"%s"' % self.key if isinstance(self.key, str) else str(self.key),
+                        name=self.inject_as)
                 ) from exc
             else:
                 value = default
