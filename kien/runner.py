@@ -165,7 +165,6 @@ class ConsoleRunner:
                 line = input(prompt)
             else:
                 line = input()
-            console.output.write('\r')
         except EOFError:
             console.linefeed()
             if ignore_end_of_file:
