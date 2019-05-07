@@ -198,6 +198,14 @@ class ConsoleRunner:
                 on_error.send(self, exc=exc)
                 console.send_data(exc)
             except CommandError as exc:
+                if exc.__cause__ is not None:
+                    # CommandError instances are usually not logged but when raised via a
+                    # `raise CommandError(...) from exc` expression are considered to be
+                    # the result of an unnatural application state. In these cases
+                    # the user should be informed about the error (through CommandError),
+                    # but `exc` should also be logged for further analysis.
+                    logger.error('Encountered CommandError caused by an unnatural '
+                                 'applicaton state.', exc_info=exc)
                 on_error.send(self, exc=exc)
                 console.send_data(exc)
             except StopProcessingEvent:
