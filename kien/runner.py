@@ -1,4 +1,5 @@
 import argparse
+import atexit
 import logging
 import os
 import readline
@@ -47,6 +48,7 @@ def initialize_pid_file(path):
                 except OSError:
                     pass
 
+    atexit.register(cleanup_pid_file)
     with open(path, 'w') as pid_file:
         pid_file.write(str(os.getpid()))
 
