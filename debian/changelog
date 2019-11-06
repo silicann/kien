@@ -1,3 +1,9 @@
+python-kien (0.13.1-1) unstable; urgency=medium
+
+  * New upstream release
+
+ -- Konrad Mohrfeldt <konrad.mohrfeldt@farbdev.org>  Wed, 06 Nov 2019 11:48:05 +0100
+
 python-kien (0.13.0-1) unstable; urgency=medium
 
   * New upstream release
