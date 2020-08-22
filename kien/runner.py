@@ -2,6 +2,7 @@ import argparse
 import atexit
 import logging
 import os
+import pathlib
 import readline
 import sys
 from typing import Sequence
@@ -137,6 +138,7 @@ class ConsoleRunner:
             if self.cli_args.modules:
                 autoload(self.commander, self.cli_args.modules)
             if self.cli_args.history is not None:
+                pathlib.Path(self.cli_args.history).touch(mode=0o640, exist_ok=True)
                 readline.read_history_file(self.cli_args.history)
 
             def handle_unhandled_exception(exc, *args):
