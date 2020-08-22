@@ -556,6 +556,11 @@ def create_commander(name, description=None):
                         'Invalid argument{}: {}'.format(
                             ' for field ' + str(exc.field) if exc.field else '', str(exc)),
                         code='INVALID_ARGUMENT_FORMAT') from exc
+                except TypeError as exc:
+                    if str(exc) == "'NoneType' object is not iterable":
+                        yield CommandResult('')
+                    else:
+                        raise
             else:
                 raise CommandError(resolved_commands.suggestion(_resolve_commands, args),
                                    code='INVALID_COMMAND')
