@@ -587,6 +587,9 @@ def create_commander(name, description=None):
 
         def __call__(self, *tokens, parent=None, is_abstract=False, group=None, inject=None,
                      is_disabled=False) -> Callable:
+            tokens = list(tokens)
+            if len(tokens) > 0 and isinstance(tokens[0], _Command):
+                parent = tokens.pop(0)
             tokens = _normalize_tokens(tokens)
             injections = _normalize_injections(inject)
 
