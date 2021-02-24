@@ -17,13 +17,15 @@ command = create_commander('help', description='List and describe all available 
 
 
 def _indent_no_first():
-    first = [True]
+    first = True
 
     def callback(line):
+        nonlocal first
+
         if not line.strip():
             return False
-        if first[0]:
-            first[0] = False
+        if first:
+            first = False
             return False
         else:
             return True
