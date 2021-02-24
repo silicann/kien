@@ -38,9 +38,13 @@ def _indent_no_first():
     return callback
 
 
-def _wrap_indent(text, prefix, text_width=WRAP_WIDTH):
-    wrapped_text = os.linesep.join(wrap(_str(text), width=text_width))
-    return indent(wrapped_text, prefix)
+def _wrap_indent(text: str, prefix: str, text_width=WRAP_WIDTH):
+    paragraph_separator = os.linesep * 2
+    paragraphs = [
+        os.linesep.join(wrap(_str(paragraph), width=text_width))
+        for paragraph in text.split(paragraph_separator)
+    ]
+    return indent(paragraph_separator.join(paragraphs), prefix)
 
 
 def _str(text):
