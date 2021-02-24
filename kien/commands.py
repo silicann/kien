@@ -26,12 +26,24 @@ class CommandResult:
         return self.message
 
 
-def _is_enum(choices):
+
+def _normalize_choices(choices) -> Union[Set[str], Dict[str, str]]:
+    if choices is None:
+        return set()
     try:
-        return issubclass(choices, enum.Enum)
-    except TypeError:
-        # "choices" is not a class (and thus not an enum)
-        return False
+        return _normalize_choices(choices.to_choices())
+    except AttributeError:
+        pass
+    try:
+        return {key: value for key, value in choices.items()}
+    except AttributeError:
+        pass
+    try:
+        # this might work for enums that use string values
+        return {str(choice.name): str(choice.value) for choice in choices}
+    except (AttributeError, TypeError):
+        pass
+    return set(choices)
 
 
 class _Token:
@@ -53,12 +65,7 @@ class _Token:
         self.transform = transform
         self.description = description
         self.aliases = frozenset(aliases or [])
-        if choices is None:
-            self.choices = set()
-        elif _is_enum(choices):
-            self.choices = {item.value for item in choices}
-        else:
-            self.choices = set(choices)
+        self.choices = _normalize_choices(choices)
 
     def matches(self, value):
         if self.value is not _Undefined:
@@ -70,7 +77,7 @@ class _Token:
         if self.name and self.choices:
             # if choices were defined we must validate that the provided
             # value actually is one of those choices
-            validate_value(one_of(self.choices), value)
+            validate_value(one_of(set(self.choices)), value)
         return True
 
     def get_label(self, with_error=None):

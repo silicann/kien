@@ -2,6 +2,7 @@ import os
 import re
 from collections import OrderedDict
 from itertools import groupby
+from operator import itemgetter
 from textwrap import wrap, indent
 
 from ..commands import create_commander, var, CommandResult, filter_root_commands, \
@@ -65,7 +66,16 @@ def render_description(cmd, long_prefix='  - ',  text_width=WRAP_WIDTH):
         if token.choices:
             if token.description:
                 token_doc += os.linesep + token_indent
-            token_doc += '%s' % ' | '.join(sorted(map(str, token.choices)))
+            try:
+                choices = list(token.choices.items())
+            except AttributeError:
+                token_doc += '%s' % ' | '.join(sorted(map(str, token.choices)))
+            else:
+                choices.sort(key=itemgetter(0))
+                for index, [key, value] in enumerate(choices):
+                    if index:
+                        token_doc += os.linesep + token_indent
+                    token_doc += '{}: {}'.format(key, value)
         doc += token_doc
 
     return TaggedString.help(doc) if doc else ''
