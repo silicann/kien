@@ -3,12 +3,26 @@ import enum
 from functools import update_wrapper, wraps
 from inspect import signature
 from itertools import groupby
-from typing import List, Sequence, Callable, Any, Optional, Iterator, Set
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Union,
+)
+
 from blinker import signal
-from .validation import validate, validate_value, one_of, ValidationError
+
+from .error import CommandError, InjectionError
 from .transformation import BuildTimeTransformContext, transform, transform_value
 from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
-from .error import CommandError, InjectionError
+from .validation import validate, validate_value, one_of, ValidationError
 
 
 class _Undefined:
@@ -50,9 +64,17 @@ class _Token:
     is_variable = False
     is_placeholder = False
 
-    def __init__(self, value=_Undefined, name=None, is_optional=False,
-                 greedy=False, transform=None, choices=None, description=None,
-                 aliases=None):
+    def __init__(
+            self,
+            value: Any = _Undefined,
+            name: str = None,
+            is_optional: bool = False,
+            greedy: bool = False,
+            transform=None,
+            choices=None,
+            description: str = None,
+            aliases: Iterable = None
+    ):
         """ specify possible value of a command string token
 
         @param choices: may be None, an enum or an iterable

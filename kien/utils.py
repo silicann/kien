@@ -12,6 +12,7 @@ import shlex
 from typing import Sequence, Callable, Union
 
 import blessings
+
 from .events import StopProcessingEvent
 from .error import ShouldThrottleException
 

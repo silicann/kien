@@ -27,12 +27,12 @@ setup(
     packages=find_packages(exclude=('examples', )),
     install_requires=[
         'blessings',
-        'blinker'
+        'blinker',
     ],
     extras_require={},
     include_package_data=True,
     package_data={
-        '': ['requirements.txt', 'README.md', 'LICENSE', 'CHANGELOG.md']
+        '': ['requirements.txt', 'README.md', 'LICENSE', 'CHANGELOG.md'],
     },
     license='GPLv3+',
     classifiers=[

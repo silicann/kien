@@ -5,8 +5,13 @@ from itertools import groupby
 from operator import itemgetter
 from textwrap import wrap, indent
 
-from ..commands import create_commander, var, CommandResult, filter_root_commands, \
-    filter_public_commands
+from ..commands import (
+    create_commander,
+    CommandResult,
+    filter_root_commands,
+    filter_public_commands,
+    var,
+)
 from ..transformation import flatten, unique
 from ..utils import join_generator_string, TaggedString
 from ..utils import strip_tags, read_object_path
@@ -115,7 +120,7 @@ def describe_command(terminal, all_commands, root):
             term_width = read_object_path(terminal, 'width', default=None)
             text_width = min(term_width, WRAP_WIDTH) if term_width else WRAP_WIDTH
             doc = render_description(cmd, text_width=text_width)
-            yield '\t%s%s' % (cmd_str, doc)
+            yield '\t{}{}\n'.format(cmd_str, doc)
 
 
 def is_command_root(root, command):
