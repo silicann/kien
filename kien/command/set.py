@@ -7,6 +7,10 @@ class OutputFormat(enum.Enum):
     HUMAN = 'human'
     JSON = 'json'
 
+    @classmethod
+    def to_choices(cls):
+        return {output_format.value for output_format in cls}
+
 
 command = create_commander('set', description='Change properties of the console interface.')
 
