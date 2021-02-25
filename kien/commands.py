@@ -19,6 +19,7 @@ from typing import (
 from blinker import signal
 
 from .error import CommandError, InjectionError
+from .mixins import RawDataMixin
 from .transformation import BuildTimeTransformContext, transform, transform_value
 from .utils import (
     join_generator_string,
@@ -34,7 +35,7 @@ class _Undefined:
     pass
 
 
-class CommandResult:
+class CommandResult(RawDataMixin, object):
     def __init__(self, message, data=None, success=True, status=None) -> None:
         self.message = message
         self.data = data

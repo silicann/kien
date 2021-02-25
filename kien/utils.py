@@ -1,6 +1,8 @@
 from collections import Iterable, namedtuple, UserString
 import contextlib
+import email.parser
 from functools import wraps
+import hashlib
 import importlib
 import inspect
 import logging
@@ -9,7 +11,7 @@ import os
 import re
 import shlex
 import time
-from typing import Callable, Sequence, Union
+from typing import Callable, IO, Sequence, Union
 
 import blessings
 
@@ -471,3 +473,65 @@ def back_pressure(commander, strategy: BackPressure = RateLimitBackPressure):
         return wrapper
 
     return decorator
+
+
+supported_hash_algorithms = {
+    _algorithm: getattr(hashlib, _algorithm)
+    for _algorithm in ["sha256", "sha512", "sha3_256", "sha3_512"]
+    if hasattr(hashlib, _algorithm)
+}
+
+
+def read_binary(file: IO, chunk_size=4096):
+    def _get_size(headers):
+        try:
+            return int(headers["Content-Length"])
+        except KeyError:
+            raise ValueError("Missing Content-Length header.")
+        except (TypeError, ValueError):
+            raise ValueError("Content-Length header must contain an integer value.")
+
+    def _get_checksum(headers):
+        checksum_format = re.compile(
+            r'"(?P<hash>[0-9a-fA-F]+)"; alg=(?P<alg>[0-9a-z]+)'
+        )
+        try:
+            data_checksum = headers["X-Data-Checksum"]
+        except KeyError:
+            raise ValueError("Missing X-Data-Checksum header.")
+        checksum_data = checksum_format.match(data_checksum)
+        if not checksum_data:
+            raise ValueError("X-Data-Checksum header has invalid format.")
+        digest = checksum_data.group("hash")
+        algorithm = checksum_data.group("alg")
+        if algorithm not in supported_hash_algorithms:
+            raise ValueError("Unsupported algorithm for X-Data-Checksum header.")
+        else:
+            algorithm = supported_hash_algorithms[algorithm]
+        return algorithm, digest
+
+    header_data = []
+    received_empty_line = False
+    while True:
+        line = file.readline().strip()
+        if line == "":
+            if received_empty_line:
+                break
+            else:
+                received_empty_line = True
+                continue
+        header_data.append(line)
+    parsed_headers = email.parser.HeaderParser().parsestr("\n".join(header_data), True)
+    remaining_content_size = _get_size(parsed_headers)
+    hash_alg, expected_hash = _get_checksum(parsed_headers)
+    content_hash = hash_alg()
+    while remaining_content_size > 0:
+        read_size = min(chunk_size, remaining_content_size)
+        data = file.read(read_size)
+        content_hash.update(data)
+        yield data
+        remaining_content_size -= read_size
+    if content_hash.hexdigest() != expected_hash:
+        raise RuntimeError(
+            "Data integrity check failed. Content checksum did not match."
+        )

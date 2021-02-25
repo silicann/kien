@@ -1,4 +1,7 @@
-class CommandError(RuntimeError):
+from kien.mixins import RawDataMixin
+
+
+class CommandError(RawDataMixin, RuntimeError):
     """raised if an error occurred while executing a command"""
 
     def __init__(self, message, data=None, status=1, code=None) -> None:

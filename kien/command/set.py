@@ -8,6 +8,9 @@ class OutputFormat(enum.Enum):
     HUMAN = "human"
     JSON = "json"
 
+    def __str__(self):
+        return self.name.lower()
+
     @classmethod
     def to_choices(cls):
         return {output_format.value for output_format in cls}

@@ -1,7 +1,6 @@
 # fmt: off
 import curses
 import fcntl
-import json
 # merely importing readline enable command history via "input"
 # noinspection PyUnresolvedReferences
 import readline  # noqa: F401
@@ -119,30 +118,15 @@ class Console:
 
     def send_data(self, result):
         status = getattr(result, "status", self._last_status)
-        error_code = getattr(result, "code", None)
-        if self._output_format not in OutputFormat:
-            raise NotImplementedError(
-                "Unknown output format selected: {}".format(self._output_format)
-            )
-
-        if self._output_format is OutputFormat.HUMAN:
-            content = self._format_output(str(result))
-        else:
-            if self._output_format is OutputFormat.JSON:
-                serializer = json.dumps
-            else:
-                raise NotImplementedError(
-                    "no serializer for output formatted: {}".format(self._output_format)
-                )
-            content = serializer(
-                {"data": result.data, "status": status, "code": error_code}
-            )
-
         self._last_status = status
-        end = ("\x20" if result.success else "\x07") + "\0"
+        end = (("\x20" if result.success else "\x07") + "\0").encode()
 
         try:
-            print(content, file=self.output, end=end, flush=True)
+            res_data = result.generate_response_data(str(self._output_format), self._format_output)
+            for data in res_data:
+                self.output.buffer.write(data)
+            self.output.buffer.write(end)
+            self.output.buffer.flush()
             self.linefeed()
         except BlockingIOError as exc:
             raise ShouldThrottleException() from exc
