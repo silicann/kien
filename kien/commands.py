@@ -10,7 +10,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Sequence,
     Set,
@@ -20,8 +19,11 @@ from typing import (
 from blinker import signal
 
 from .error import CommandError, InjectionError
+from .mixins import RawDataMixin
 from .transformation import BuildTimeTransformContext, transform, transform_value
-from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
+from .utils import (
+    tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop,
+)
 from .validation import validate, validate_value, one_of, ValidationError
 
 
@@ -29,7 +31,7 @@ class _Undefined:
     pass
 
 
-class CommandResult:
+class CommandResult(RawDataMixin, object):
     def __init__(self, message, data=None, success=True, status=None) -> None:
         self.message = message
         self.data = data
@@ -38,7 +40,6 @@ class CommandResult:
 
     def __str__(self):
         return self.message
-
 
 
 def _normalize_choices(choices) -> Union[Set[str], Dict[str, str]]:
