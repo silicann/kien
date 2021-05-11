@@ -2,6 +2,8 @@ import os
 
 from setuptools import find_packages, setup
 
+from kien import __version__
+
 __dir = os.path.abspath(os.path.dirname(__file__))
 
 try:
@@ -10,14 +12,10 @@ try:
 except FileNotFoundError:
     long_description = ''
 
-about = {}
-with open(os.path.join(__dir, 'kien', '__version__.py')) as f:
-    exec(f.read(), about)
-
 
 setup(
     name='kien',
-    version=about['__version__'],
+    version=__version__,
     description='kien is a line-based command parser for creating shell-like interfaces',
     long_description=long_description,
     long_description_content_type='text/markdown',
