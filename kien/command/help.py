@@ -122,7 +122,11 @@ def describe_command(terminal, all_commands, root):
         for cmd in group_commands:
             cmd_str = str(cmd)
             term_width = read_object_path(terminal, 'width', default=None)
-            text_width = min(term_width, WRAP_WIDTH) if term_width and term_width > 0 else WRAP_WIDTH
+            text_width = (
+                min(term_width, WRAP_WIDTH)
+                if term_width and term_width > 0
+                else WRAP_WIDTH
+            )
             doc = render_description(cmd, text_width=text_width)
             yield '\t{}{}\n'.format(cmd_str, doc)
 

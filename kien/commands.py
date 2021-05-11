@@ -10,7 +10,6 @@ from typing import (
     Iterable,
     Iterator,
     List,
-    Mapping,
     Optional,
     Sequence,
     Set,
@@ -38,7 +37,6 @@ class CommandResult:
 
     def __str__(self):
         return self.message
-
 
 
 def _normalize_choices(choices) -> Union[Set[str], Dict[str, str]]:
