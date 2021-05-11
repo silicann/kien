@@ -30,7 +30,7 @@ setup(
     extras_require={},
     include_package_data=True,
     package_data={
-        '': ['requirements.txt', 'README.md', 'LICENSE', 'CHANGELOG.md'],
+        '': ['README.md', 'LICENSE', 'CHANGELOG.md'],
     },
     license='GPLv3+',
     classifiers=[
