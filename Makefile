@@ -7,6 +7,8 @@ BLACK_ARGS = --target-version py35
 BLACK_BIN = $(PYTHON_BIN) -m black
 COVERAGE_BIN ?= $(PYTHON_BIN) -m coverage
 
+PYPI_BUILD_DIR ?= dist
+
 default-target: build
 
 .PHONY: lint-python-black
@@ -27,11 +29,11 @@ test-report-short:
 style:
 	$(BLACK_BIN) $(BLACK_ARGS) $(BLACK_TARGETS)
 
-distribute-pypi:
-	@if ! which twine >/dev/null 2>&1 || [ "$$(printf "1.11.0\n$$(twine --version | head -1 | cut -d" " -f3)" | sort -V | head -1)" != "1.11.0" ]; then \
-		echo "you need twine >v1.11.0" >&2; \
-		exit 1; \
-	fi
-	rm -rf dist/
+.PHONY: clean-pypi
+clean-pypi:
+	$(RM) -r "$(PYPI_BUILD_DIR)"
+
+.PHONY: distribute-pypi
+distribute-pypi: clean-pypi
 	python3 setup.py sdist
-	twine upload dist/*
+	twine upload "$(PYPI_BUILD_DIR)"/*
