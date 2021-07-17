@@ -482,7 +482,13 @@ supported_hash_algorithms = {
 }
 
 
-def read_binary(file: IO, chunk_size=4096):
+def read_binary(data_input: IO, chunk_size=4096):
+    """ read HTTP response (headers + body), check the hash and yield the body as binary chunks
+
+    The header "Content-Length" is required.
+    The header "X-Data-Checksum" contains the digest and the algorithm, e.g.:
+        X-Data-Checksum: "1234567890abcdef"; alg=sha256
+    """
     def _get_size(headers):
         try:
             return int(headers["Content-Length"])
@@ -513,7 +519,7 @@ def read_binary(file: IO, chunk_size=4096):
     header_data = []
     received_empty_line = False
     while True:
-        line = file.readline().strip()
+        line = data_input.readline().strip()
         if line == "":
             if received_empty_line:
                 break
@@ -527,7 +533,7 @@ def read_binary(file: IO, chunk_size=4096):
     content_hash = hash_alg()
     while remaining_content_size > 0:
         read_size = min(chunk_size, remaining_content_size)
-        data = file.read(read_size)
+        data = data_input.read(read_size)
         content_hash.update(data)
         yield data
         remaining_content_size -= read_size
