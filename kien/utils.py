@@ -488,14 +488,12 @@ def read_binary(data_input: IO, chunk_size=4096):
     header_data = []
     received_empty_line = False
     while True:
-        line = data_input.readline().strip()
-        if line == '':
-            if received_empty_line:
-                break
-            else:
-                received_empty_line = True
-                continue
-        header_data.append(line)
+        line = data_input.readline()
+        if line:
+            header_data.append(line.strip())
+        else:
+            # we reached the end of the header
+            break
     parsed_headers = email.parser.HeaderParser().parsestr('\n'.join(header_data), True)
     remaining_content_size = _get_size(parsed_headers)
     hash_alg, expected_hash = _get_checksum(parsed_headers)
