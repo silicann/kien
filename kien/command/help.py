@@ -13,11 +13,8 @@ from ..commands import (
     var,
 )
 from ..transformation import flatten, unique
-from ..utils import join_generator_string, TaggedString
-from ..utils import strip_tags, read_object_path
+from ..utils import join_generator_string, strip_tags, TaggedString
 from ..error import CommandError
-
-WRAP_WIDTH = 80
 
 command = create_commander('help', description='List and describe all available commands.')
 
@@ -38,7 +35,7 @@ def _indent_no_first():
     return callback
 
 
-def _wrap_indent(text: str, prefix: str, text_width=WRAP_WIDTH):
+def _wrap_indent(text: str, prefix: str, text_width: int):
     paragraph_separator = os.linesep * 2
     paragraphs = [
         os.linesep.join(wrap(_str(paragraph), width=text_width))
@@ -51,7 +48,7 @@ def _str(text):
     return text.strip() if isinstance(text, str) else ''
 
 
-def render_description(cmd, long_prefix='  - ',  text_width=WRAP_WIDTH):
+def _render_description(cmd, text_width, long_prefix='  - '):
     doc = re.sub(r'[ ]{2,}', '', _str(cmd.__doc__))
     _indent = '\t' + ' ' * len(long_prefix)
 
@@ -99,11 +96,13 @@ def describe_command_list(commands: dict):
 
 
 @join_generator_string()
-@command.inject(terminal='terminal')
-def describe_command(terminal, all_commands, root):
+@command.inject(output_width='output_width')
+def describe_command(all_commands, root, output_width=80):
     yield TaggedString.header('%s command' % str(root))
     if root.__commander__.__doc__:
-        yield TaggedString.help(_wrap_indent(root.__commander__.__doc__, ''))
+        yield TaggedString.help(
+            _wrap_indent(root.__commander__.__doc__, '', output_width)
+        )
     yield ''
     yield TaggedString.label('Supported Subcommands')
     public_commands = filter_public_commands(all_commands)
@@ -121,13 +120,7 @@ def describe_command(terminal, all_commands, root):
                 yield TaggedString.help(indent(os.linesep.join(wrap(group.description)), '\t  '))
         for cmd in group_commands:
             cmd_str = str(cmd)
-            term_width = read_object_path(terminal, 'width', default=None)
-            text_width = (
-                min(term_width, WRAP_WIDTH)
-                if term_width and term_width > 0
-                else WRAP_WIDTH
-            )
-            doc = render_description(cmd, text_width=text_width)
+            doc = _render_description(cmd, output_width)
             yield '\t{}{}\n'.format(cmd_str, doc)
 
 

@@ -132,8 +132,14 @@ class ConsoleRunner:
             console.configure_auto(force_disable_style=self.cli_args.disable_style)
             if self.commander is None:
                 raise RuntimeError('You must configure a commander before starting run')
+
+            def _get_terminal_width():
+                if console.terminal.width is not None and console.terminal.width > 0:
+                    return console.terminal.width
+                else:
+                    return 80
             self.commander.provide('console', console)
-            self.commander.provide('terminal', console.terminal)
+            self.commander.provide('output_width', _get_terminal_width, is_getter=True)
             self.console = console
             if self.cli_args.modules:
                 autoload(self.commander, self.cli_args.modules)
