@@ -2,9 +2,11 @@ import os
 
 from setuptools import find_packages, setup
 
-from kien import __version__
-
 __dir = os.path.abspath(os.path.dirname(__file__))
+# don’t import the __version__ attr from the kien module
+# so that our convenience imports won’t trigger an ImportError
+# during pip install if our dependencies are not available on the system yet.
+__version__ = '0.15.1'
 
 try:
     with open(os.path.join(__dir, 'README.md'), encoding='utf-8') as f:
