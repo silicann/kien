@@ -33,6 +33,8 @@ style:
 clean-pypi:
 	$(RM) -r "$(PYPI_BUILD_DIR)"
 
+clean: clean-pypi
+
 .PHONY: distribute-pypi
 distribute-pypi: clean-pypi
 	python3 setup.py sdist
