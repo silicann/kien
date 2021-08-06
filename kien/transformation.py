@@ -4,10 +4,10 @@ import itertools
 import re
 from typing import Callable, Hashable, Iterable, Mapping, Pattern
 
-from .validation import validate_value, one_of
+from .validation import one_of, validate_value
 
-TRUE_CHOICES = ('true', '1', 'on', 'yes', 'enable')
-FALSE_CHOICES = ('false', '0', 'off', 'no', 'disable')
+TRUE_CHOICES = ("true", "1", "on", "yes", "enable")
+FALSE_CHOICES = ("false", "0", "off", "no", "disable")
 
 
 def transform(**fields):
@@ -17,11 +17,15 @@ def transform(**fields):
             transformed_kwargs = {}
             for field, transformator in fields.items():
                 try:
-                    transformed_kwargs[field] = transform_value(transformator, kwargs.pop(field))
+                    transformed_kwargs[field] = transform_value(
+                        transformator, kwargs.pop(field)
+                    )
                 except KeyError:
                     transformed_kwargs[field] = None
             return func(*args, **transformed_kwargs, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -32,16 +36,16 @@ def transform_value(transformator, value):
         transformators = [transformator]
 
     for transformator in transformators:
-        if getattr(transformator, '__is_transformator', False):
+        if getattr(transformator, "__is_transformator", False):
             # syntactic sugar for uses of uninstantiated transformers
             transformator = transformator()
-        value = getattr(transformator, 'transform', transformator)(value)
+        value = getattr(transformator, "transform", transformator)(value)
 
     return value
 
 
 class BuildTimeTransformContext:
-    _indicator_name = '__takes_transform_context'
+    _indicator_name = "__takes_transform_context"
 
     def __init__(self, value, kwargs) -> None:
         self.value = value
@@ -61,6 +65,7 @@ class BuildTimeTransformContext:
                 return func(*args, context.value, **context.kwargs, **kwargs)
             else:
                 return func(*args, **kwargs)
+
         setattr(wrapper, cls._indicator_name, True)
         return wrapper
 
@@ -68,6 +73,7 @@ class BuildTimeTransformContext:
 def takes_transform_context(auto_spread=True):
     def decorator(func):
         return BuildTimeTransformContext.decorate(func, auto_spread)
+
     return decorator
 
 
@@ -95,6 +101,7 @@ def simple_transformator(func):
         transformator = Transformator(func, args, kwargs)
         update_wrapper(transformator, func)
         return transformator
+
     decorator.__is_transformator = True
     return decorator
 
@@ -108,7 +115,7 @@ def to_bool(value, choices=(TRUE_CHOICES, FALSE_CHOICES)):
     elif value in false_values:
         return False
     else:
-        assert False, 'got a value that is neither truthy nor falsy'
+        assert False, "got a value that is neither truthy nor falsy"
 
 
 @simple_transformator

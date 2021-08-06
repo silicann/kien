@@ -1,30 +1,32 @@
-from collections import namedtuple, Iterable, UserString
+from collections import Iterable, namedtuple, UserString
 import contextlib
 from functools import wraps
 import importlib
-import logging
-import os
 import inspect
-import time
+import logging
 import math
+import os
 import re
 import shlex
-from typing import Sequence, Callable, Union
+import time
+from typing import Callable, Sequence, Union
 
 import blessings
 
-from .events import StopProcessingEvent
 from .error import ShouldThrottleException
+from .events import StopProcessingEvent
 
 
-PATH_ATTRIBUTE = re.compile(r'^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)$')
-PATH_DICT = re.compile(r'^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[[\"\'](?P<key>.+)[\"\']\]$')
-PATH_INDEX = re.compile(r'^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[(?P<index>\d+)\]$')
-PATH_CALL = re.compile(r'^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\(\)$')
-TAG_REGEX = re.compile(r'(?:<(?P<tag>[a-z]+)>)'
-                       r'(?P<content>(?:<(?!/)|[^<])+)'
-                       r'(?:</(?P<closing_tag>[a-z]+)>)')
-TokenMismatch = namedtuple('TokenMismatch', ['token', 'exception', 'value'])
+PATH_ATTRIBUTE = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)$")
+PATH_DICT = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[[\"\'](?P<key>.+)[\"\']\]$")
+PATH_INDEX = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[(?P<index>\d+)\]$")
+PATH_CALL = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\(\)$")
+TAG_REGEX = re.compile(
+    r"(?:<(?P<tag>[a-z]+)>)"
+    r"(?P<content>(?:<(?!/)|[^<])+)"
+    r"(?:</(?P<closing_tag>[a-z]+)>)"
+)
+TokenMismatch = namedtuple("TokenMismatch", ["token", "exception", "value"])
 
 try:
     # contextlib.AbstractContextManager was introduced in Python 3.7
@@ -33,7 +35,7 @@ except AttributeError:
     AbstractContextManager = object
 
 
-def tokenize_args(comment_characters=('#',)):
+def tokenize_args(comment_characters=("#",)):
     def decorator(func):
         @wraps(func)
         def wrapper(command, *args, **kwargs):
@@ -43,7 +45,9 @@ def tokenize_args(comment_characters=('#',)):
                     raise StopProcessingEvent()
                 command = shlex.split(command)
             return func(command, *args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
@@ -64,13 +68,18 @@ def join_generator_string(glue: str = os.linesep, formatter: Callable = None):
         @wraps(func)
         def wrapper(*args, **kwargs):
             result = func(*args, **kwargs)
-            return glue.join(map(_format, result)) if isinstance(result, Iterable) \
+            return (
+                glue.join(map(_format, result))
+                if isinstance(result, Iterable)
                 else _format(result)
+            )
+
         return wrapper
+
     return decorator
 
 
-def columns(separator='\t', join_char=None):
+def columns(separator="\t", join_char=None):
     join_char = join_char or separator
 
     def get_column_width(rows, index):
@@ -90,11 +99,15 @@ def columns(separator='\t', join_char=None):
         @join_generator_string(formatter=str.rstrip)
         @wraps(func)
         def wrapper(*args, **kwargs):
-            rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
+            rows = [
+                line.split(separator) for line in func(*args, *kwargs).split(os.linesep)
+            ]
             column_widths = calculate_column_widths(rows)
             for row in rows:
                 yield join_char.join(fit_row(row, column_widths))
+
         return wrapper
+
     return decorator
 
 
@@ -131,7 +144,9 @@ def throttle(frequency=None, limit=None):
 
             if call_count == limit:
                 raise throttle.Stop()
+
         return wrapper
+
     return decorator
 
 
@@ -146,6 +161,7 @@ def _tagged_string(tag):
     @classmethod
     def func(cls, s):
         return str(cls(s, tag))
+
     func.__name__ = tag
     return func
 
@@ -156,38 +172,38 @@ class TaggedString(UserString):
         self.tag = tag
 
     def __str__(self):
-        return '<{tag}>{token}</{tag}>'.format(token=self.data, tag=self.tag)
+        return "<{tag}>{token}</{tag}>".format(token=self.data, tag=self.tag)
 
     @classmethod
     def __getattr__(cls, item):
         return lambda s: _tagged_string(item)(cls, s)
 
-    optional = _tagged_string('optional')
-    var = _tagged_string('var')
-    error = _tagged_string('error')
-    help = _tagged_string('help')
-    label = _tagged_string('label')
-    header = _tagged_string('header')
+    optional = _tagged_string("optional")
+    var = _tagged_string("var")
+    error = _tagged_string("error")
+    help = _tagged_string("help")
+    label = _tagged_string("label")
+    header = _tagged_string("header")
 
 
 def strip_tags(s):
     # we don’t process html here but our own simple one-line strings
     # if you were to use this for html you are a bad bad dog
-    return re.sub(r'<[^<]+?>', '', s)
+    return re.sub(r"<[^<]+?>", "", s)
 
 
 def render_tags(s, terminal: blessings.Terminal):
     def _replace_tag(match):
         tag, content, closing_tag = match.groups()
         if tag != closing_tag:
-            raise ValueError('tag mismatch in content')
+            raise ValueError("tag mismatch in content")
         replaced_value = {
-            'optional': terminal.dim,
-            'var': terminal.bold_white,
-            'error': terminal.red,
-            'label': terminal.bold,
-            'help': terminal.italic_dim,
-            'header': lambda s: terminal.bold(s.upper()),
+            "optional": terminal.dim,
+            "var": terminal.bold_white,
+            "error": terminal.red,
+            "label": terminal.bold,
+            "help": terminal.italic_dim,
+            "header": lambda s: terminal.bold(s.upper()),
         }[tag](content)
         return replaced_value
 
@@ -208,7 +224,7 @@ def autoload(commander, modules: Sequence[str]):
 
 
 def noop(*args, **kwargs):
-    """ a function that does nothing except accepting everything you throw at it """
+    """a function that does nothing except accepting everything you throw at it"""
     pass
 
 
@@ -236,7 +252,7 @@ def read_object_path(obj, obj_path, default=_undefined_result):
     # try to split one path token from the path and in case that
     # fails assume that the object_path is an attribute name
     try:
-        obj_key, new_obj_path = obj_path.split('.', 1)
+        obj_key, new_obj_path = obj_path.split(".", 1)
     except ValueError:
         obj_key, new_obj_path = obj_path, None
     result = _undefined_result
@@ -252,7 +268,7 @@ def read_object_path(obj, obj_path, default=_undefined_result):
         # as all property keys refer to an attribute first
         # lets extract that attribute right now
         try:
-            attr = getattr(obj, match.group('attr'))
+            attr = getattr(obj, match.group("attr"))
         except AttributeError as exc:
             return _default(exc)
 
@@ -263,14 +279,14 @@ def read_object_path(obj, obj_path, default=_undefined_result):
         elif matcher == PATH_DICT:
             # object key referred to a dictionary
             try:
-                result = attr[match.group('key')]
+                result = attr[match.group("key")]
             except KeyError as exc:
                 return _default(exc)
             break
         elif matcher == PATH_INDEX:
             # object key referred to a sequence
             try:
-                result = attr[match.group('index')]
+                result = attr[match.group("index")]
             except IndexError as exc:
                 return _default(exc)
             break
@@ -297,11 +313,12 @@ def read_object_path(obj, obj_path, default=_undefined_result):
 
 
 def failsafe(exc_type=Exception, enable=True, callback=None):
-    """ keep a function from failing
+    """keep a function from failing
     :param exc_type: the exception type that should be catched
     :param enable: if exception handling should be enabled
     :param callback: an optional callback for processing and on-failure return value
     """
+
     def decorator(func):
         def wrapper(*args, **kwargs):
             if enable:
@@ -312,12 +329,14 @@ def failsafe(exc_type=Exception, enable=True, callback=None):
                         return callback(exc, args, kwargs)
             else:
                 return func(*args, **kwargs)
+
         return wrapper
+
     return decorator
 
 
 class FragileStreamHandler(logging.StreamHandler):
-    """ simple wrapper around StreamHandler that handles broken output targets gracefully
+    """simple wrapper around StreamHandler that handles broken output targets gracefully
 
     This is relevant for interfaces, that may disconnect at any time (e.g. a USB gadget interface).
     Here we need to ignore logging errors.
@@ -338,7 +357,7 @@ class CommandExecutionContext(AbstractContextManager):
     on terminal interface devices.
     """
 
-    ID = '__keen_command_execution_context__'
+    ID = "__keen_command_execution_context__"
 
     def __init__(self):
         self.interceptors = []
@@ -365,6 +384,7 @@ class BackPressure:
     by the RunnerContext for intercepting exceptions raised during command result
     processing.
     """
+
     def handle(self, exc_type, *args):
         # back-pressure is signaled by the internal ShouldThrottleException
         # as a result from a BlockingIOError on the device that is used
@@ -397,6 +417,7 @@ class RateLimitBackPressure(BackPressure):
     increases its rate limit by 1 every time the output interfaces
     is blocking, resulting in a reduced data flow.
     """
+
     def __init__(self, rate_modifier: Union[int, Callable] = 1) -> None:
         """
         :param rate_modifier: controls the change of the rate limit whenever
@@ -405,8 +426,11 @@ class RateLimitBackPressure(BackPressure):
                               that receives the current rate limit as only value.
         """
         self.rate_limit = 1
-        self.rate_modifier = rate_modifier if callable(rate_modifier) \
+        self.rate_modifier = (
+            rate_modifier
+            if callable(rate_modifier)
             else lambda rate_limit: max(1, rate_limit + rate_modifier)
+        )
 
     def __call__(self, iterable: Iterable) -> Iterable:
         for index, result in enumerate(iterable):
@@ -416,8 +440,11 @@ class RateLimitBackPressure(BackPressure):
     def increase(self):
         self.rate_limit = self.rate_modifier(self.rate_limit)
         from .runner import logger
-        logger.info('Applying back-pressure to command generator. '
-                    'Increasing rate limit to %d.' % self.rate_limit)
+
+        logger.info(
+            "Applying back-pressure to command generator. "
+            "Increasing rate limit to %d." % self.rate_limit
+        )
         return True
 
 
@@ -440,5 +467,7 @@ def back_pressure(commander, strategy: BackPressure = RateLimitBackPressure):
             context = kwargs.pop(CommandExecutionContext.ID)
             with context.intercept(strategy()) as handler:
                 yield from handler(func(*args, **kwargs))
+
         return wrapper
+
     return decorator

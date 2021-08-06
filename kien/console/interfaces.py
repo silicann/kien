@@ -32,7 +32,7 @@ def get_interface_handler(specification, logger):
     if parsed.scheme == "tty":
         parser_map = {"reconnect_on_hangup": bool, "baudrate": int}
         handler = TTYInterface
-        args = (parsed.path, )
+        args = (parsed.path,)
     elif parsed.scheme == "telnet":
         parser_map = {"port": int}
         if ":" in parsed.path:
@@ -40,7 +40,7 @@ def get_interface_handler(specification, logger):
         else:
             host = parsed.path
         handler = TelnetInterface
-        args = (host, )
+        args = (host,)
     # parse and convert values
     for key, target_type in parser_map.items():
         if key in kwargs:
@@ -48,22 +48,27 @@ def get_interface_handler(specification, logger):
                 kwargs[key] = _parse_value_from_string(kwargs[key], target_type)
             except ValueError as exc:
                 raise InvalidInterfaceSpecificationError(
-                    "Failed to identify {} value of '{}': {}"
-                    .format(target_type.__name__, key, kwargs[key])) from exc
+                    "Failed to identify {} value of '{}': {}".format(
+                        target_type.__name__, key, kwargs[key]
+                    )
+                ) from exc
     # create an instance of the handler
     try:
         return handler(logger, *args, **kwargs)
     except TypeError as exc:
-        raise InvalidInterfaceSpecificationError("Failed to instantiate terminal handler ({}): {}"
-                                                 .format(handler.__class__.__name__, exc)) from exc
+        raise InvalidInterfaceSpecificationError(
+            "Failed to instantiate terminal handler ({}): {}".format(
+                handler.__class__.__name__, exc
+            )
+        ) from exc
 
 
 class InvalidInterfaceSpecificationError(Exception):
-    """ Indicate an invalid terminal specification (e.g. unknown scheme or missing arguments) """
+    """Indicate an invalid terminal specification (e.g. unknown scheme or missing arguments)"""
 
 
 class BaseInterface:
-    """ interface implementations are supposed to reconfigured sys.stdin and sys.stdout
+    """interface implementations are supposed to reconfigured sys.stdin and sys.stdout
 
     The details of the interfaces should be hidden well, in order to allow its users to keep using
     the builtins "input()" and "print()".
@@ -80,7 +85,7 @@ class BaseInterface:
 
 
 class LocalInterface(BaseInterface):
-    """ communicate directly with stdin and stdout """
+    """communicate directly with stdin and stdout"""
 
     def connect(self):
         pass
@@ -89,11 +94,10 @@ class LocalInterface(BaseInterface):
         pass
 
     def __str__(self):
-        return ("Local")
+        return "Local"
 
 
 class TTYInterface(BaseInterface):
-
     def __init__(self, logger, path, baudrate=115200, reconnect_on_hangup=True):
         super().__init__(logger)
         self.path = path
@@ -104,16 +108,21 @@ class TTYInterface(BaseInterface):
             # Try to import the module early: errors in "connect" are much harder to debug, since
             # they are running in a separate process without stderr.
             import serial
+
             try:
-                self.baudrate_tcattr_value = serial.Serial.BAUDRATE_CONSTANTS[self.baudrate]
+                self.baudrate_tcattr_value = serial.Serial.BAUDRATE_CONSTANTS[
+                    self.baudrate
+                ]
             except KeyError:
-                InvalidInterfaceSpecificationError("Non-standard baudrates are not supported: {}"
-                                                   .format(self.baudrate))
+                InvalidInterfaceSpecificationError(
+                    "Non-standard baudrates are not supported: {}".format(self.baudrate)
+                )
 
     def connect(self):
         def _sighup_handler(sig, frame):
             self.logger.info("Received SIGHUP: reconnecting to %s", self)
             self.connect()
+
         if not self.is_initialized:
             # execute all preparations (e.g. forking) for acquiring our terminal later on
             self._become_session_leader()
@@ -130,7 +139,7 @@ class TTYInterface(BaseInterface):
 
     @staticmethod
     def _become_session_leader():
-        """ replicate the effect of the helper program 'setsid ...' """
+        """replicate the effect of the helper program 'setsid ...'"""
         try:
             os.setsid()
         except PermissionError:
@@ -142,13 +151,15 @@ class TTYInterface(BaseInterface):
                 os.setsid()
 
     def _acquire_controlling_terminal(self):
-        """ fork the process in order to become session leader and replace stdin/stdout/stderr
+        """fork the process in order to become session leader and replace stdin/stdout/stderr
 
         The result should be comparable with running the program via "setsid -w agetty ...".
         """
         # TODO: the flags are just copied from agetty's behaviour
         self.logger.debug("Opening target terminal: %s", self.path)
-        dev = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
+        dev = os.open(
+            self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE
+        )
         self.logger.debug("Closing stdin and stdout")
         for handle in (sys.stdin, sys.stdout):
             try:
@@ -179,40 +190,47 @@ class TTYInterface(BaseInterface):
         os.close(dev)
 
     def __str__(self):
-        return ("TTY (dev={}, baudrate={:d}, reconnect_on_hangup={})"
-                .format(self.path, self.baudrate, self.reconnect_on_hangup))
+        return "TTY (dev={}, baudrate={:d}, reconnect_on_hangup={})".format(
+            self.path, self.baudrate, self.reconnect_on_hangup
+        )
 
 
 class TelnetInterface(BaseInterface):
-
     def __init__(self, logger, host, port=None):
         super().__init__(logger)
         raise NotImplementedError
 
 
 class InterfaceManager:
-
     def __init__(self, logger):
         self.running_interface_processes = {}
         self.logger = logger
 
     def run(self, wanted_interfaces, log_filename_by_process=None):
-        """ fork processes for each wanted interface
+        """fork processes for each wanted interface
 
         This function returns for the child processes (i.e.: they may continue using stdin/stdout).
         The parent process (the interface manager) stays alive and never returns.
         """
         if not self.run_and_stop_interfaces(
-                wanted_interfaces, log_filename_by_process=log_filename_by_process):
+            wanted_interfaces, log_filename_by_process=log_filename_by_process
+        ):
             # we are a managed interface process - simply return
             return
         # we are the manager
         # Ignore all signals that we want to listen for, but store their previous handlers.
         original_signal_handlers = {}
-        for one_signal in {signal.SIGUSR1, signal.SIGHUP, signal.SIGTERM, signal.SIGCHLD}:
+        for one_signal in {
+            signal.SIGUSR1,
+            signal.SIGHUP,
+            signal.SIGTERM,
+            signal.SIGCHLD,
+        }:
             # The signal handler signal.SIG_IGN is not appropriate: it would prevent "sigwaitinfo"
             # below from capturing these signals.
-            original_signal_handlers[one_signal] = signal.signal(one_signal, lambda *args: None)
+            original_signal_handlers[one_signal] = signal.signal(
+                one_signal, lambda *args: None
+            )
         should_finish = False
         while not should_finish:
             try:
@@ -226,11 +244,17 @@ class InterfaceManager:
                 should_finish = True
             elif signal_info.si_signo == signal.SIGCHLD:
                 # a child process signals its termination
-                matched_specs = {spec for spec, pid in self.running_interface_processes.items()
-                                 if pid == signal_info.si_pid}
+                matched_specs = {
+                    spec
+                    for spec, pid in self.running_interface_processes.items()
+                    if pid == signal_info.si_pid
+                }
                 for spec in matched_specs:
-                    self.logger.info("A child signals its termination: %d %s",
-                                     signal_info.si_pid, spec)
+                    self.logger.info(
+                        "A child signals its termination: %d %s",
+                        signal_info.si_pid,
+                        spec,
+                    )
                     self.running_interface_processes.pop(spec)
                     # in any case: retrieve its result (otherwise it will end up as a zombie)
                     os.waitpid(signal_info.si_pid, os.WNOHANG)
@@ -245,7 +269,8 @@ class InterfaceManager:
                 # Parse the wanted set of interfaces from a given text file and update the list of
                 # running processes appropriately.
                 raise NotImplementedError(
-                    "The 'update interfaces from file' feature is not supported, yet.")
+                    "The 'update interfaces from file' feature is not supported, yet."
+                )
             else:
                 raise NotImplementedError("Received unknown signal")
         # kill all child processes
@@ -253,7 +278,7 @@ class InterfaceManager:
         sys.exit(0)
 
     def run_and_stop_interfaces(self, wanted_interfaces, log_filename_by_process=None):
-        """ kill old processes or start new ones
+        """kill old processes or start new ones
 
         @param wanted_interfaces: list of text-based interface specifications
         @param log_filename_by_process: filename template (including "%d" for the PID) to be used
@@ -263,26 +288,33 @@ class InterfaceManager:
         obsolete_interfaces = running_set.difference(wanted_interfaces)
         new_wanted_interfaces = wanted_interfaces.difference(running_set)
         if obsolete_interfaces:
-            self.logger.info("Terminating processes of obsolete interfaces: %s",
-                             obsolete_interfaces)
+            self.logger.info(
+                "Terminating processes of obsolete interfaces: %s", obsolete_interfaces
+            )
         # kill obsolete child processes
         for obsolete in obsolete_interfaces:
             child_pid = self.running_interface_processes.pop(obsolete)
             try:
                 os.kill(child_pid, signal.SIGTERM)
             except OSError:
-                self.logger.warning("Failed to kill obsolete child process: %d (%s)",
-                                    child_pid, obsolete)
+                self.logger.warning(
+                    "Failed to kill obsolete child process: %d (%s)",
+                    child_pid,
+                    obsolete,
+                )
         # parse the specifications first (reduced risk of leaving a broken mess)
         if new_wanted_interfaces:
-            self.logger.info("Starting processes for new interfaces: %s", new_wanted_interfaces)
+            self.logger.info(
+                "Starting processes for new interfaces: %s", new_wanted_interfaces
+            )
         interface_handlers = {}
         for new_spec in new_wanted_interfaces:
             try:
                 handler = get_interface_handler(new_spec, self.logger)
             except InvalidInterfaceSpecificationError as exc:
-                self.logger.error("Failed to parse interface specification ('%s'): %s",
-                                  new_spec, exc)
+                self.logger.error(
+                    "Failed to parse interface specification ('%s'): %s", new_spec, exc
+                )
                 sys.exit(1)
             else:
                 interface_handlers[new_spec] = handler
@@ -306,7 +338,9 @@ class InterfaceManager:
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
                 # our logging handler also influences the logging handler of the interface
                 self.reconfigure_logging()
-                self.logger.info("Spawned process %d for interface: %s", os.getpid(), handler)
+                self.logger.info(
+                    "Spawned process %d for interface: %s", os.getpid(), handler
+                )
                 # there is nothing more to be prepared by us - the logic handler may take over
                 return False
             else:
@@ -316,7 +350,7 @@ class InterfaceManager:
         return True
 
     def reconfigure_logging(self):
-        """ remove all existing log handlers and add a stream handler to stderr (if open) """
+        """remove all existing log handlers and add a stream handler to stderr (if open)"""
         self.logger.debug("Reconfiguring logging")
         for handler in self.logger.handlers:
             self.logger.removeHandler(handler)

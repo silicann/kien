@@ -1,16 +1,16 @@
 from .. import create_commander
 from ..events import ConsoleExitEvent
 
-command = create_commander('quit')
+command = create_commander("quit")
 
 
-@command('exit')
+@command("exit")
 def exit():
-    """ exit the interpreter """
+    """exit the interpreter"""
     raise ConsoleExitEvent()
 
 
-@command('quit')
+@command("quit")
 def quit():
-    """ exit the interpreter """
+    """exit the interpreter"""
     raise ConsoleExitEvent()

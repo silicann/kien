@@ -20,8 +20,14 @@ from blinker import signal
 
 from .error import CommandError, InjectionError
 from .transformation import BuildTimeTransformContext, transform, transform_value
-from .utils import tokenize_args, join_generator_string, TokenMismatch, TaggedString, noop
-from .validation import validate, validate_value, one_of, ValidationError
+from .utils import (
+    join_generator_string,
+    noop,
+    TaggedString,
+    tokenize_args,
+    TokenMismatch,
+)
+from .validation import one_of, validate, validate_value, ValidationError
 
 
 class _Undefined:
@@ -63,17 +69,17 @@ class _Token:
     is_placeholder = False
 
     def __init__(
-            self,
-            value: Any = _Undefined,
-            name: str = None,
-            is_optional: bool = False,
-            greedy: bool = False,
-            transform=None,
-            choices=None,
-            description: str = None,
-            aliases: Iterable = None
+        self,
+        value: Any = _Undefined,
+        name: str = None,
+        is_optional: bool = False,
+        greedy: bool = False,
+        transform=None,
+        choices=None,
+        description: str = None,
+        aliases: Iterable = None,
     ):
-        """ specify possible value of a command string token
+        """specify possible value of a command string token
 
         @param choices: may be None, an enum or an iterable
         """
@@ -93,7 +99,7 @@ class _Token:
         if self.name and self.transform:
             # we trigger the token validation here to handle args that
             # have been misspelled and to provide command suggestions
-            getattr(self.transform, 'validate', noop)(value)
+            getattr(self.transform, "validate", noop)(value)
         if self.name and self.choices:
             # if choices were defined we must validate that the provided
             # value actually is one of those choices
@@ -102,11 +108,13 @@ class _Token:
 
     def get_label(self, with_error=None):
         def format_greedy(name):
-            return '[%s [...]]' % name
+            return "[%s [...]]" % name
 
         def format_optional(name):
-            name = TaggedString.error(name) if with_error else TaggedString.optional(name)
-            return '[%s]' % name
+            name = (
+                TaggedString.error(name) if with_error else TaggedString.optional(name)
+            )
+            return "[%s]" % name
 
         def get_name(token):
             if token.name:
@@ -114,7 +122,7 @@ class _Token:
             if token.value:
                 return token.value
             else:
-                raise ValueError('cannot derive name from token')
+                raise ValueError("cannot derive name from token")
 
         token = get_name(self)
 
@@ -145,8 +153,15 @@ class _Group:
         self.description = description
 
 
-def var(name, value=_Undefined, is_optional=False, transform=None, greedy=None,
-        choices=None, description=None):
+def var(
+    name,
+    value=_Undefined,
+    is_optional=False,
+    transform=None,
+    greedy=None,
+    choices=None,
+    description=None,
+):
     return _Variable(value, name, is_optional, greedy, transform, choices, description)
 
 
@@ -168,22 +183,22 @@ def _find_token(tokens, index):
     elif tokens[-1].greedy:
         return tokens[-1]
     else:
-        raise IndexError('invalid token index')
+        raise IndexError("invalid token index")
 
 
 class _MatchType(enum.Enum):
     NONE = None
-    INVALID = 'invalid'
-    PARTIAL = 'partial'
-    EXACT = 'exact'
+    INVALID = "invalid"
+    PARTIAL = "partial"
+    EXACT = "exact"
 
     def __str__(self):
         if self.value is _MatchType.NONE:
-            raise NotImplementedError('please override the match type')
+            raise NotImplementedError("please override the match type")
         return {
-            _MatchType.INVALID: 'Invalid commands',
-            _MatchType.PARTIAL: 'Partial matching commands',
-            _MatchType.EXACT: 'Selected command'
+            _MatchType.INVALID: "Invalid commands",
+            _MatchType.PARTIAL: "Partial matching commands",
+            _MatchType.EXACT: "Selected command",
         }[self]
 
     def __lt__(self, other):
@@ -204,7 +219,9 @@ class _InvalidCommandMatch(_CommandMatch):
 class _PartialCommandMatch(_CommandMatch):
     type = _MatchType.PARTIAL
 
-    def __init__(self, command, token=None, token_mismatches: Sequence[TokenMismatch] = tuple()):
+    def __init__(
+        self, command, token=None, token_mismatches: Sequence[TokenMismatch] = tuple()
+    ):
         super().__init__(command)
         self.token = token
         self.token_mismatches = token_mismatches
@@ -228,19 +245,22 @@ class _CommandMatches:
     def describe(self, args, discard_invalid=True) -> str:
         @join_generator_string()
         def _render() -> str:
-            yield 'provided args:'
-            yield '\t%s' % ' '.join(args)
-            yield ''
-            exclude = (_MatchType.INVALID, ) if discard_invalid else None
+            yield "provided args:"
+            yield "\t%s" % " ".join(args)
+            yield ""
+            exclude = (_MatchType.INVALID,) if discard_invalid else None
             match_groups = self._filter_matches(exclude=exclude, group=True)
             for match_type, matches in match_groups:
-                yield '%s' % str(match_type)
+                yield "%s" % str(match_type)
                 for match in matches:
-                    token_mismatches = getattr(match, 'token_mismatches', None)
-                    yield '\t%s' % match.command.get_label(with_errors=token_mismatches)
+                    token_mismatches = getattr(match, "token_mismatches", None)
+                    yield "\t%s" % match.command.get_label(with_errors=token_mismatches)
+
         return _render()
 
-    def _filter_matches(self, include=None, exclude=None, group=False) -> List[_CommandMatch]:
+    def _filter_matches(
+        self, include=None, exclude=None, group=False
+    ) -> List[_CommandMatch]:
         def _pluck_type(m):
             return m.type
 
@@ -275,33 +295,38 @@ class _CommandMatches:
                     # possible matches are resolved by skipping arguments from end
                     # to start. if a command had too many arguments we may find an
                     # exact match at some point. this is the case here
-                    yield 'You have provided too many arguments for this command.'
-                    yield 'Usage:\n\t' + match.command.get_label()
+                    yield "You have provided too many arguments for this command."
+                    yield "Usage:\n\t" + match.command.get_label()
                 else:
                     # if it’s not an exact match it’s a mismatch, because one of
                     # the tokens was rejected (likely during validation).
                     # display errors for each mismatched token.
                     if len(match.token_mismatches) > 0:
                         for mismatch in match.token_mismatches:
-                            yield '{name}: {message}'.format(
-                                name=mismatch.token.get_label(), message=str(mismatch.exception))
+                            yield "{name}: {message}".format(
+                                name=mismatch.token.get_label(),
+                                message=str(mismatch.exception),
+                            )
                     else:
-                        yield 'You have not provided sufficient arguments for this command.'
-                        yield 'Usage:\n\t' + match.command.get_label()
+                        yield "You have not provided sufficient arguments for this command."
+                        yield "Usage:\n\t" + match.command.get_label()
             else:
-                yield 'Could not find the command for "%s"' % ' '.join(args)
+                yield 'Could not find the command for "%s"' % " ".join(args)
                 if matches:
                     if len(matches) == 1:
-                        yield 'Did you mean:'
+                        yield "Did you mean:"
                     else:
-                        yield 'Did you mean one of:'
+                        yield "Did you mean one of:"
                     for match in matches:
-                        yield '\t%s' % match.command.get_label()
+                        yield "\t%s" % match.command.get_label()
+
         return _render()
 
     @property
     def exact_match(self) -> Optional[_ExactCommandMatch]:
-        matches = [match for match in self.matches if isinstance(match, _ExactCommandMatch)]
+        matches = [
+            match for match in self.matches if isinstance(match, _ExactCommandMatch)
+        ]
         if len(matches) > 1:
             raise AmbiguousCommandError(matches)
         elif len(matches) == 1:
@@ -311,8 +336,16 @@ class _CommandMatches:
 
 
 class _Command:
-    def __init__(self, func, tokens: List[_Token], parent, is_abstract, group, inject,
-                 is_disabled):
+    def __init__(
+        self,
+        func,
+        tokens: List[_Token],
+        parent,
+        is_abstract,
+        group,
+        inject,
+        is_disabled,
+    ):
         self.func = func
         self.tokens = tokens
         self.parent = parent
@@ -335,7 +368,7 @@ class _Command:
             raise exc
 
     def __str__(self):
-        return ' '.join([str(token) for token in self.all_tokens])
+        return " ".join([str(token) for token in self.all_tokens])
 
     def __getattr__(self, name: str) -> Any:
         # this object acts as a wrapper for the underlying function
@@ -378,7 +411,7 @@ class _Command:
         # we made sure that the provided args match the defined tokens
         # but we may have more tokens. if one of the left over tokens
         # is not optional this command is a partial match
-        for token in tokens[len(args):]:
+        for token in tokens[len(args) :]:
             if not token.is_optional:
                 return _PartialCommandMatch(self, token, invalid_tokens)
 
@@ -400,15 +433,17 @@ class _Command:
                         return mismatch.exception
             return None
 
-        return ' '.join(
-            token.get_label(with_error=find_error(token))
-            for token in self.all_tokens
+        return " ".join(
+            token.get_label(with_error=find_error(token)) for token in self.all_tokens
         )
 
     @property
     def is_disabled(self):
-        return self._is_disabled(self) if callable(self._is_disabled) \
+        return (
+            self._is_disabled(self)
+            if callable(self._is_disabled)
             else bool(self._is_disabled)
+        )
 
     @property
     def is_executable(self):
@@ -456,13 +491,18 @@ def _build_args(tokens, args: Sequence):
             break
 
         if token.name:
+
             def _transform(value):
                 if BuildTimeTransformContext.takes_context(token.transform):
                     value = BuildTimeTransformContext(value, dict(result_args))
                 return transform_value(token.transform, value)
+
             arg = args[0:] if token.greedy else args.pop(0)
-            if token.transform and isinstance(arg, collections.Iterable) and \
-                    not isinstance(arg, str):
+            if (
+                token.transform
+                and isinstance(arg, collections.Iterable)
+                and not isinstance(arg, str)
+            ):
                 result = list(map(lambda x: _transform(x), arg))
             elif token.transform:
                 result = _transform(arg)
@@ -499,8 +539,9 @@ class _Injection:
                 raise InjectionError(
                     'Dependency "{source}" injected as "{name}" was not provided at runtime. '
                     'Did you forget to call `command.provide("{source}", foo)` '
-                    'at some point or to set a default value?'.format(
-                        name=self.inject_as, source=self.key)
+                    "at some point or to set a default value?".format(
+                        name=self.inject_as, source=self.key
+                    )
                 ) from exc
             else:
                 value = default
@@ -514,11 +555,9 @@ def require(key=None, inject_as=None, collect=False, default=_Undefined):
 def create_commander(name, description=None):
     commands = []
     context = {}
-    static_context = {
-        '__commands': commands
-    }
+    static_context = {"__commands": commands}
 
-    require_signal = signal('require')
+    require_signal = signal("require")
 
     def _collect_commands():
         return filter_public_commands(commands)
@@ -557,7 +596,7 @@ def create_commander(name, description=None):
 
         def __init__(self, name):
             self.name = name
-            self.__doc__ = """%s""" % (description or '')
+            self.__doc__ = """%s""" % (description or "")
             self.__class__.__name__ = name
 
         @staticmethod
@@ -577,20 +616,27 @@ def create_commander(name, description=None):
                 yield CommandResult(message=resolved_commands.describe(args))
             elif resolved_commands.exact_match:
                 try:
-                    yield from resolved_commands.exact_match.command(args, require=_require)
+                    yield from resolved_commands.exact_match.command(
+                        args, require=_require
+                    )
                 except ValidationError as exc:
                     raise CommandError(
-                        'Invalid argument{}: {}'.format(
-                            ' for field ' + str(exc.field) if exc.field else '', str(exc)),
-                        code='INVALID_ARGUMENT_FORMAT') from exc
+                        "Invalid argument{}: {}".format(
+                            " for field " + str(exc.field) if exc.field else "",
+                            str(exc),
+                        ),
+                        code="INVALID_ARGUMENT_FORMAT",
+                    ) from exc
                 except TypeError as exc:
                     if str(exc) == "'NoneType' object is not iterable":
-                        yield CommandResult('')
+                        yield CommandResult("")
                     else:
                         raise
             else:
-                raise CommandError(resolved_commands.suggestion(_resolve_commands, args),
-                                   code='INVALID_COMMAND')
+                raise CommandError(
+                    resolved_commands.suggestion(_resolve_commands, args),
+                    code="INVALID_COMMAND",
+                )
 
         @classmethod
         def fire(cls, args):
@@ -605,15 +651,28 @@ def create_commander(name, description=None):
                 @wraps(func)
                 def wrapper(*args, **kwargs):
                     arg_injections = _build_inject_args(func, arg_requires, _require)
-                    kwarg_injections = _build_inject_args(func, kwarg_requires, _require)
+                    kwarg_injections = _build_inject_args(
+                        func, kwarg_requires, _require
+                    )
                     injections = _merge_dicts(arg_injections, kwarg_injections)
-                    fargs, fkwargs = _fit_args(func, args, _merge_dicts(injections, kwargs))
+                    fargs, fkwargs = _fit_args(
+                        func, args, _merge_dicts(injections, kwargs)
+                    )
                     return func(*fargs, **fkwargs)
+
                 return wrapper
+
             return decorator
 
-        def __call__(self, *tokens, parent=None, is_abstract=False, group=None, inject=None,
-                     is_disabled=False) -> Callable:
+        def __call__(
+            self,
+            *tokens,
+            parent=None,
+            is_abstract=False,
+            group=None,
+            inject=None,
+            is_disabled=False
+        ) -> Callable:
             tokens = list(tokens)
             if len(tokens) > 0 and isinstance(tokens[0], _Command):
                 parent = tokens.pop(0)
@@ -621,20 +680,22 @@ def create_commander(name, description=None):
             injections = _normalize_injections(inject)
 
             def decorator(func):
-                func_command = _Command(func, tokens, parent, is_abstract,
-                                        group, injections, is_disabled)
+                func_command = _Command(
+                    func, tokens, parent, is_abstract, group, injections, is_disabled
+                )
                 update_wrapper(func_command, func)
                 func_command.__commander__ = self
                 commands.append(func_command)
                 return func_command
+
             return decorator
 
-        def compose(self, *commanders) -> 'Commander':
+        def compose(self, *commanders) -> "Commander":
             for commander in commanders:
                 commander.extend(commands, _require)
             return self
 
-        def extend(self, your_commands, your_require) -> 'Commander':
+        def extend(self, your_commands, your_require) -> "Commander":
             your_commands.extend(commands)
             require_signal.connect(your_require)
             return self
@@ -654,7 +715,7 @@ def _merge_dicts(*dicts):
 
 def _fit_args(func, args, kwargs):
     args = list(args)
-    func_args = func.__code__.co_varnames[:func.__code__.co_argcount]
+    func_args = func.__code__.co_varnames[: func.__code__.co_argcount]
     for index, arg in enumerate(func_args):
         if arg in kwargs:
             args.insert(index, kwargs.pop(arg))
@@ -678,7 +739,7 @@ def _normalize_injections(injections) -> List[_Injection]:
         return result
 
     def normalize_require(key):
-        if key.endswith('[]'):
+        if key.endswith("[]"):
             return key[:-2], True
         else:
             return key, False
@@ -695,7 +756,7 @@ def _normalize_injections(injections) -> List[_Injection]:
         for injection in injections:
             if not isinstance(injection, _Injection):
                 try:
-                    key, inject_as = injection.split(':')
+                    key, inject_as = injection.split(":")
                     key, collect = normalize_require(key)
                 except ValueError:
                     key, collect = normalize_require(injection)
