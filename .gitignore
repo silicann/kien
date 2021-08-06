@@ -11,3 +11,4 @@ build/
 dist/
 .tox/
 kien.egg-info/
+.coverage
