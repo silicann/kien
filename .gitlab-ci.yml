@@ -1,0 +1,4 @@
+include:
+  - project: 'urwerk/gitlab-recipes'
+    ref: main
+    file: '/templates/python-lib.yaml'
