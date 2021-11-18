@@ -11,4 +11,4 @@ from .transformation import transform  # noqa: F401
 from .validation import validate  # noqa: F401
 
 
-__version__ = "0.15.2"
+__version__ = "__version__ = '0.16.0'"
