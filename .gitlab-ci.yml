@@ -1,4 +1,4 @@
 include:
-  - project: 'urwerk/gitlab-recipes'
+  - project: 'silicann/infrastructure/gitlab-recipes'
     ref: main
-    file: '/templates/python-lib.yaml'
+    file: '/templates/main.gitlab-ci.yml'
