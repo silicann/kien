@@ -1,4 +1,4 @@
-from collections import Iterable, namedtuple, UserString
+from collections import namedtuple, UserString
 import contextlib
 from functools import wraps
 import importlib
@@ -9,7 +9,7 @@ import os
 import re
 import shlex
 import time
-from typing import Callable, Sequence, Union
+from typing import Callable, Iterable, Sequence, Union
 
 import blessings
 
