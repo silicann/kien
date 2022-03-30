@@ -1,4 +1,3 @@
-import collections
 import enum
 from functools import update_wrapper, wraps
 from inspect import signature
@@ -486,7 +485,7 @@ def _build_args(tokens, args: Sequence):
             arg = args[0:] if token.greedy else args.pop(0)
             if (
                 token.transform
-                and isinstance(arg, collections.Iterable)
+                and isinstance(arg, Iterable)
                 and not isinstance(arg, str)
             ):
                 result = list(map(lambda x: _transform(x), arg))

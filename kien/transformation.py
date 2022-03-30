@@ -1,4 +1,3 @@
-import collections
 from functools import update_wrapper, wraps
 import itertools
 import re
@@ -28,7 +27,7 @@ def transform(**fields):
 
 
 def transform_value(transformator, value):
-    if isinstance(transformator, collections.Iterable):
+    if isinstance(transformator, Iterable):
         transformators = transformator
     else:
         transformators = [transformator]
