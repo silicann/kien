@@ -41,6 +41,13 @@ def get_interface_handler(specification, logger):
             host = parsed.path
         handler = TelnetInterface
         args = (host,)
+    else:
+        raise ValueError(
+            (
+                "Interface specification uses unknown scheme '{scheme}'"
+                "Must be either 'tty' or 'telnet'. Example: tty:///dev/ttyUSB0"
+            ).format(scheme=parsed.scheme),
+        )
     # parse and convert values
     for key, target_type in parser_map.items():
         if key in kwargs:
