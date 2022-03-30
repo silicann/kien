@@ -26,7 +26,7 @@ def _parse_value_from_string(value, target_type):
 
 def get_interface_handler(specification, logger):
     if specification is None:
-        return LocalInterface()
+        return LocalInterface(logger)
     parsed = urllib.parse.urlparse(specification)
     kwargs = dict(urllib.parse.parse_qsl(parsed.query))
     if parsed.scheme == "tty":
