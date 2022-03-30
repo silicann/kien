@@ -6,6 +6,7 @@ Build-Depends:
  debhelper (>= 9),
  dh-python,
  python3-all,
+ python3-setuptools,
 # package dependencies
  python3-blinker,
  python3-blessings,
