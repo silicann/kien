@@ -17,9 +17,7 @@ def transform(**fields):
             transformed_kwargs = {}
             for field, transformator in fields.items():
                 try:
-                    transformed_kwargs[field] = transform_value(
-                        transformator, kwargs.pop(field)
-                    )
+                    transformed_kwargs[field] = transform_value(transformator, kwargs.pop(field))
                 except KeyError:
                     transformed_kwargs[field] = None
             return func(*args, **transformed_kwargs, **kwargs)

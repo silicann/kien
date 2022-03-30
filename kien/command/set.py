@@ -13,9 +13,7 @@ class OutputFormat(enum.Enum):
         return {output_format.value for output_format in cls}
 
 
-command = create_commander(
-    "set", description="Change properties of the console interface."
-)
+command = create_commander("set", description="Change properties of the console interface.")
 
 
 @command("set", is_abstract=True, inject=["console"])
@@ -23,9 +21,7 @@ def set_state():
     pass
 
 
-@command(
-    "echo", var("state", transform=to_bool, choices=("on", "off")), parent=set_state
-)
+@command("echo", var("state", transform=to_bool, choices=("on", "off")), parent=set_state)
 def set_echo(console, state):
     """enable/disable any output of prompts or typed text"""
     console.set_echo(state)

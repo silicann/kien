@@ -21,11 +21,13 @@ PATH_ATTRIBUTE = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)$")
 PATH_DICT = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[[\"\'](?P<key>.+)[\"\']\]$")
 PATH_INDEX = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[(?P<index>\d+)\]$")
 PATH_CALL = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\(\)$")
+# fmt: off
 TAG_REGEX = re.compile(
     r"(?:<(?P<tag>[a-z]+)>)"
     r"(?P<content>(?:<(?!/)|[^<])+)"
     r"(?:</(?P<closing_tag>[a-z]+)>)"
 )
+# fmt: on
 TokenMismatch = namedtuple("TokenMismatch", ["token", "exception", "value"])
 
 try:
@@ -99,9 +101,7 @@ def columns(separator="\t", join_char=None):
         @join_generator_string(formatter=str.rstrip)
         @wraps(func)
         def wrapper(*args, **kwargs):
-            rows = [
-                line.split(separator) for line in func(*args, *kwargs).split(os.linesep)
-            ]
+            rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
             column_widths = calculate_column_widths(rows)
             for row in rows:
                 yield join_char.join(fit_row(row, column_widths))

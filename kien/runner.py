@@ -88,13 +88,9 @@ class ConsoleRunner:
             "--interface",
             dest="interfaces",
             action="append",
-            help=(
-                "Bind to the given interface(s) and use these for input and " "output"
-            ),
+            help="Bind to the given interface(s) and use these for input and output",
         )
-        parser.add_argument(
-            "--pid-file", default=None, type=str, help="write process pid to file"
-        )
+        parser.add_argument("--pid-file", default=None, type=str, help="write process pid to file")
         parser.add_argument(
             "--log-level",
             dest="log_level",
@@ -121,21 +117,21 @@ class ConsoleRunner:
         parser.add_argument(
             "--failsafe",
             action="store_true",
-            help="keep the application running no matter what "
-            "runtime exceptions are thrown",
+            help="keep the application running no matter what runtime exceptions are thrown",
         )
         parser.add_argument(
             "--failsafe-errors",
             action="store_true",
-            help="in case failsafe is enabled this option will log any unhandled "
-            "exceptions that are encountered",
+            help=(
+                "In case failsafe is enabled this option will log any unhandled "
+                "exceptions that are encountered"
+            ),
         )
         parser.add_argument(
             "--simulate",
             dest="simulate",
             action="store_true",
-            help="Show which command would have been executed instead of "
-            "executing it",
+            help="Show which command would have been executed instead of executing it",
         )
         return parser
 
@@ -197,17 +193,13 @@ class ConsoleRunner:
 
             def handle_unhandled_exception(exc, *args):
                 if self.cli_args.failsafe_errors:
-                    logger.error(
-                        "unhandled exception", exc_info=exc, extra=dict(callargs=args)
-                    )
+                    logger.error("unhandled exception", exc_info=exc, extra=dict(callargs=args))
                 return True
 
             # start the application loop
             while True:
 
-                @failsafe(
-                    enable=self.cli_args.failsafe, callback=handle_unhandled_exception
-                )
+                @failsafe(enable=self.cli_args.failsafe, callback=handle_unhandled_exception)
                 def _process_line():
                     return self._process_line(
                         console,

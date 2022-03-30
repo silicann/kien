@@ -111,9 +111,7 @@ class _Token:
             return "[%s [...]]" % name
 
         def format_optional(name):
-            name = (
-                TaggedString.error(name) if with_error else TaggedString.optional(name)
-            )
+            name = TaggedString.error(name) if with_error else TaggedString.optional(name)
             return "[%s]" % name
 
         def get_name(token):
@@ -219,9 +217,7 @@ class _InvalidCommandMatch(_CommandMatch):
 class _PartialCommandMatch(_CommandMatch):
     type = _MatchType.PARTIAL
 
-    def __init__(
-        self, command, token=None, token_mismatches: Sequence[TokenMismatch] = tuple()
-    ):
+    def __init__(self, command, token=None, token_mismatches: Sequence[TokenMismatch] = tuple()):
         super().__init__(command)
         self.token = token
         self.token_mismatches = token_mismatches
@@ -258,9 +254,7 @@ class _CommandMatches:
 
         return _render()
 
-    def _filter_matches(
-        self, include=None, exclude=None, group=False
-    ) -> List[_CommandMatch]:
+    def _filter_matches(self, include=None, exclude=None, group=False) -> List[_CommandMatch]:
         def _pluck_type(m):
             return m.type
 
@@ -324,9 +318,7 @@ class _CommandMatches:
 
     @property
     def exact_match(self) -> Optional[_ExactCommandMatch]:
-        matches = [
-            match for match in self.matches if isinstance(match, _ExactCommandMatch)
-        ]
+        matches = [match for match in self.matches if isinstance(match, _ExactCommandMatch)]
         if len(matches) > 1:
             raise AmbiguousCommandError(matches)
         elif len(matches) == 1:
@@ -433,17 +425,11 @@ class _Command:
                         return mismatch.exception
             return None
 
-        return " ".join(
-            token.get_label(with_error=find_error(token)) for token in self.all_tokens
-        )
+        return " ".join(token.get_label(with_error=find_error(token)) for token in self.all_tokens)
 
     @property
     def is_disabled(self):
-        return (
-            self._is_disabled(self)
-            if callable(self._is_disabled)
-            else bool(self._is_disabled)
-        )
+        return self._is_disabled(self) if callable(self._is_disabled) else bool(self._is_disabled)
 
     @property
     def is_executable(self):
@@ -616,9 +602,7 @@ def create_commander(name, description=None):
                 yield CommandResult(message=resolved_commands.describe(args))
             elif resolved_commands.exact_match:
                 try:
-                    yield from resolved_commands.exact_match.command(
-                        args, require=_require
-                    )
+                    yield from resolved_commands.exact_match.command(args, require=_require)
                 except ValidationError as exc:
                     raise CommandError(
                         "Invalid argument{}: {}".format(
@@ -651,13 +635,9 @@ def create_commander(name, description=None):
                 @wraps(func)
                 def wrapper(*args, **kwargs):
                     arg_injections = _build_inject_args(func, arg_requires, _require)
-                    kwarg_injections = _build_inject_args(
-                        func, kwarg_requires, _require
-                    )
+                    kwarg_injections = _build_inject_args(func, kwarg_requires, _require)
                     injections = _merge_dicts(arg_injections, kwarg_injections)
-                    fargs, fkwargs = _fit_args(
-                        func, args, _merge_dicts(injections, kwargs)
-                    )
+                    fargs, fkwargs = _fit_args(func, args, _merge_dicts(injections, kwargs))
                     return func(*fargs, **fkwargs)
 
                 return wrapper
