@@ -2,7 +2,7 @@ include make.d/makefilet-download-ondemand.mk
 
 DEBIAN_UPLOAD_TARGET = silicann
 
-BLACK_FILES = kien tests setup.py
+BLACK_FILES = kien/ tests/ setup.py
 COVERAGE_BIN ?= $(PYTHON_BIN) -m coverage
 
 PYPI_BUILD_DIR ?= dist
