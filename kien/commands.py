@@ -70,13 +70,13 @@ class _Token:
     def __init__(
         self,
         value: Any = _Undefined,
-        name: str = None,
+        name: Optional[str] = None,
         is_optional: bool = False,
         greedy: bool = False,
         transform=None,
         choices=None,
-        description: str = None,
-        aliases: Iterable = None,
+        description: Optional[str] = None,
+        aliases: Optional[Iterable[str]] = None,
     ):
         """specify possible value of a command string token
 
@@ -239,12 +239,12 @@ class _CommandMatches:
 
     def describe(self, args, discard_invalid=True) -> str:
         @join_generator_string()
-        def _render() -> str:
+        def _render() -> Iterable[str]:
             yield "provided args:"
             yield "\t%s" % " ".join(args)
             yield ""
             exclude = (_MatchType.INVALID,) if discard_invalid else None
-            match_groups = self._filter_matches(exclude=exclude, group=True)
+            match_groups = groupby(self._filter_matches(exclude=exclude), key=lambda m: m.type)
             for match_type, matches in match_groups:
                 yield "%s" % str(match_type)
                 for match in matches:
@@ -253,8 +253,8 @@ class _CommandMatches:
 
         return _render()
 
-    def _filter_matches(self, include=None, exclude=None, group=False) -> List[_CommandMatch]:
-        def _pluck_type(m):
+    def _filter_matches(self, include=None, exclude=None) -> Sequence[_CommandMatch]:
+        def _pluck_type(m) -> _MatchType:
             return m.type
 
         def _filter(match):
@@ -263,8 +263,7 @@ class _CommandMatches:
             if exclude and _pluck_type(match) in exclude:
                 return False
 
-        matches = sorted(filter(_filter, self.matches), key=_pluck_type)
-        return groupby(matches, key=_pluck_type) if group else matches
+        return list(sorted(filter(_filter, self.matches), key=_pluck_type))
 
     def find_suggestable_matches(self, resolve, args):
         matches = self._filter_matches(include=(_MatchType.EXACT, _MatchType.PARTIAL))
@@ -278,7 +277,7 @@ class _CommandMatches:
 
     def suggestion(self, resolve, args) -> str:
         @join_generator_string()
-        def _render() -> str:
+        def _render() -> Iterable[str]:
             matches = self.find_suggestable_matches(resolve, args)
             if len(matches) == 1:
                 # a single match has been found for the args. this is likely
@@ -291,6 +290,7 @@ class _CommandMatches:
                     yield "You have provided too many arguments for this command."
                     yield "Usage:\n\t" + match.command.get_label()
                 else:
+                    assert isinstance(match, _PartialCommandMatch)
                     # if it’s not an exact match it’s a mismatch, because one of
                     # the tokens was rejected (likely during validation).
                     # display errors for each mismatched token.
@@ -414,7 +414,7 @@ class _Command:
     def mount(self, parent):
         self.parent = parent
 
-    def get_label(self, with_errors: Sequence[TokenMismatch] = None):
+    def get_label(self, with_errors: Optional[Sequence[TokenMismatch]] = None):
         def find_error(token):
             if with_errors is None:
                 return None
@@ -483,11 +483,7 @@ def _build_args(tokens, args: Sequence):
                 return transform_value(token.transform, value)
 
             arg = args[0:] if token.greedy else args.pop(0)
-            if (
-                token.transform
-                and isinstance(arg, Iterable)
-                and not isinstance(arg, str)
-            ):
+            if token.transform and isinstance(arg, Iterable) and not isinstance(arg, str):
                 result = list(map(lambda x: _transform(x), arg))
             elif token.transform:
                 result = _transform(arg)
@@ -663,7 +659,7 @@ def create_commander(name, description=None):
                     func, tokens, parent, is_abstract, group, injections, is_disabled
                 )
                 update_wrapper(func_command, func)
-                func_command.__commander__ = self
+                func_command.__commander__ = self  # type: ignore
                 commands.append(func_command)
                 return func_command
 

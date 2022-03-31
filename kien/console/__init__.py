@@ -75,7 +75,7 @@ class Console:
         if self._original_console_attributes is not None:
             tcsetattr_flags = termios.TCSAFLUSH
             if hasattr(termios, "TCSASOFT"):
-                tcsetattr_flags |= termios.TCSASOFT
+                tcsetattr_flags |= termios.TCSASOFT  # type: ignore
             termios.tcsetattr(self.output, tcsetattr_flags, self._original_console_attributes)
 
     def select_output_format(self, output_format):
@@ -90,7 +90,7 @@ class Console:
                 attributes[tty.LFLAG] &= ~termios.ECHO
             tcsetattr_flags = termios.TCSAFLUSH
             if hasattr(termios, "TCSASOFT"):
-                tcsetattr_flags |= termios.TCSASOFT
+                tcsetattr_flags |= termios.TCSASOFT  # type: ignore
             termios.tcsetattr(self.output, tcsetattr_flags, attributes)
         self._show_echo = enabled
 

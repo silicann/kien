@@ -3,6 +3,7 @@ import os
 import signal
 import sys
 import termios
+from typing import Any, Mapping
 import urllib.parse
 
 
@@ -28,7 +29,7 @@ def get_interface_handler(specification, logger):
     if specification is None:
         return LocalInterface(logger)
     parsed = urllib.parse.urlparse(specification)
-    kwargs = dict(urllib.parse.parse_qsl(parsed.query))
+    kwargs = dict(urllib.parse.parse_qsl(parsed.query))  # type: Mapping[str, Any]
     if parsed.scheme == "tty":
         parser_map = {"reconnect_on_hangup": bool, "baudrate": int}
         handler = TTYInterface
@@ -65,7 +66,7 @@ def get_interface_handler(specification, logger):
     except TypeError as exc:
         raise InvalidInterfaceSpecificationError(
             "Failed to instantiate terminal handler ({}): {}".format(
-                handler.__class__.__name__, exc
+                handler.__class__.__name__, exc  # type: ignore
             )
         ) from exc
 

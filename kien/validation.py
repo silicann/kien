@@ -1,6 +1,6 @@
 from functools import update_wrapper, wraps
 import re
-from typing import Any
+from typing import Any, Callable
 
 
 def validate(**fields):
@@ -107,7 +107,7 @@ class _And(_AbstractValidator):
         validate_value(self.second, value)
 
 
-def simple_validator(func):
+def simple_validator(func: Callable[..., Any]) -> Callable[..., Validator]:
     def decorator(*args, **kwargs):
         validator = Validator(func, args, kwargs)
         update_wrapper(validator, func)

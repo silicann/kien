@@ -1,7 +1,7 @@
 from functools import update_wrapper, wraps
 import itertools
 import re
-from typing import Callable, Hashable, Iterable, Mapping, Pattern
+from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, Pattern, Sequence, Union
 
 from .validation import one_of, validate_value
 
@@ -26,7 +26,14 @@ def transform(**fields):
     return decorator
 
 
-def transform_value(transformator, value):
+T_Transformable = Union[
+    Callable[[Any], Any],
+    Callable[[], "Transformator"],
+    "Transformator",
+]
+
+
+def transform_value(transformator: Union[T_Transformable, Iterable[T_Transformable]], value):
     if isinstance(transformator, Iterable):
         transformators = transformator
     else:
@@ -35,8 +42,8 @@ def transform_value(transformator, value):
     for transformator in transformators:
         if getattr(transformator, "__is_transformator", False):
             # syntactic sugar for uses of uninstantiated transformers
-            transformator = transformator()
-        value = getattr(transformator, "transform", transformator)(value)
+            transformator = transformator()  # type: ignore
+        value = getattr(transformator, "transform", transformator)(value)  # type: ignore
 
     return value
 
@@ -81,7 +88,7 @@ class Transformable:
 
 
 class Transformator(Transformable):
-    def __init__(self, func, args, kwargs):
+    def __init__(self, func, args: Sequence[Any], kwargs: Mapping[str, Any]):
         self.func = func
         self.args = args
         self.kwargs = kwargs
@@ -90,10 +97,10 @@ class Transformator(Transformable):
         return self.func(*self.args, value, **self.kwargs)
 
     def __call__(self, value):
-        self.transform(value)
+        return self.transform(value)
 
 
-def simple_transformator(func):
+def simple_transformator(func: Callable[..., Any]) -> Callable[..., Transformator]:
     def decorator(*args, **kwargs):
         transformator = Transformator(func, args, kwargs)
         update_wrapper(transformator, func)
@@ -127,6 +134,7 @@ def from_regex(expr: Pattern, value: str, convert_to: Callable = tuple):
     :return:
     """
     match = re.match(expr, value)
+    assert match is not None
 
     args, kwargs = [], {}
     # when calling .group() the index 0 always returns the full match
@@ -140,7 +148,7 @@ def from_regex(expr: Pattern, value: str, convert_to: Callable = tuple):
 
 
 @simple_transformator
-def to_enum(enum, value, static_map: Mapping[Hashable, Iterable[str]] = None):
+def to_enum(enum, value, static_map: Optional[Mapping[Hashable, Iterable[str]]] = None):
     """
     Converts a literal value to a value from an enum.
 

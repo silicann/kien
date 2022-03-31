@@ -5,7 +5,7 @@ import os
 import pathlib
 import readline
 import sys
-from typing import Sequence
+from typing import Optional, Sequence
 
 import blinker
 
@@ -135,7 +135,7 @@ class ConsoleRunner:
         )
         return parser
 
-    def parse_args(self, args: Sequence[str] = None) -> argparse.Namespace:
+    def parse_args(self, args: Optional[Sequence[str]] = None) -> argparse.Namespace:
         args = sys.argv[1:] if args is None else args
         return self.get_arg_parser().parse_args(args)
 
@@ -171,6 +171,8 @@ class ConsoleRunner:
     def run(self) -> None:
         self.configure()
 
+        assert isinstance(self.cli_args, argparse.Namespace)
+
         with Console(lambda: sys.stdout, prompt=self.prompt) as console:
             console.configure_auto(force_disable_style=self.cli_args.disable_style)
             if self.commander is None:
@@ -192,7 +194,7 @@ class ConsoleRunner:
                 readline.read_history_file(self.cli_args.history)
 
             def handle_unhandled_exception(exc, *args):
-                if self.cli_args.failsafe_errors:
+                if self.cli_args.failsafe_errors:  # type: ignore
                     logger.error("unhandled exception", exc_info=exc, extra=dict(callargs=args))
                 return True
 
@@ -204,7 +206,7 @@ class ConsoleRunner:
                     return self._process_line(
                         console,
                         self.commander,
-                        ignore_end_of_file=self.cli_args.ignore_eof,
+                        ignore_end_of_file=self.cli_args.ignore_eof,  # type: ignore
                     )
 
                 try:
