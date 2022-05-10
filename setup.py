@@ -6,7 +6,7 @@ __dir = os.path.abspath(os.path.dirname(__file__))
 # don’t import the __version__ attr from the kien module
 # so that our convenience imports won’t trigger an ImportError
 # during pip install if our dependencies are not available on the system yet.
-__version__ = "0.16.1"
+__version__ = "0.16.2"
 
 try:
     with open(os.path.join(__dir, "README.md"), encoding="utf-8") as f:
