@@ -1,5 +1,73 @@
 # kien release changelog
 
+## v0.16.0
+
+* FEATURE: Loads of packaging improvements.
+
+
+## v0.15.2
+
+* FIX:     Properly declared dependencies for pip-based installation.
+
+
+## v0.15.1
+
+* FIX:     Decouple terminal output width handling from help text generation.
+
+
+## v0.15.0
+
+* FEATURE: Allow command parent to be specified as first positional argument.
+* FEATURE: Support paragraphs (defined line wrapping) in help texts.
+
+
+## v0.14.0
+
+* FEATURE: Allow command handlers to omit yielding a `CommandResult` if no response is required.
+
+
+## v0.13.1
+
+* FIX:     Remove previously generated PID file when exiting the process.
+
+
+## v0.13.0
+
+* FIX:     Proper help message for log output filename selection.
+* FIX:     Emit the line feed only for human-readable output.
+* FIX:     Do not emit a hard-coded `\r` after reading an input line.
+* FEATURE: Introduce `CommandExecutionContext` for improved exception handling.
+* FEATURE: Introduce `back_pressure` indication for controlling data flow.
+
+
+## v0.12.4
+
+* FIX:     Prevent input editors from emitting a line break after long lines by increasing the
+           windows width of the terminal.
+* BREAK:   Change default line separator from `\n\r` to `\n`.
+
+
+## v0.12.3
+
+* FIX:     Emit validation error messages with a stable sorting of exepected inputs.
+
+
+## v0.12.2
+
+* FIX:     Compatibility with Python before v3.6.
+
+
+## v0.12.1
+
+* FIX:     Deterministic processing of boolean values.
+
+
+## v0.12.0
+
+* FIX:     Remove trailing padding whitespace in column-style output.
+* FEATURE: Add optional "formatter" parameter to "join_generator_string".
+
+
 ## v0.11.1
 
 * FIX:     `regex` validator will always match the full string
