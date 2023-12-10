@@ -9,6 +9,7 @@ import struct
 import sys
 import termios
 import tty
+import typing
 # fmt: on
 
 import blessings
@@ -23,16 +24,25 @@ from ..utils import render_tags, strip_tags
 UNSIGNED_SHORT_MAX = 65535
 TERMINAL_SIZE_MAX = struct.pack("HHHH", UNSIGNED_SHORT_MAX, UNSIGNED_SHORT_MAX, 0, 0)
 
+IndirectIO = typing.Callable[[], typing.TextIO] | typing.TextIO
+
 
 class Console:
-    def __init__(self, output, prompt="> ", output_format=OutputFormat.HUMAN):
+    def __init__(
+        self,
+        output: IndirectIO,
+        prompt: str = "> ",
+        output_format: OutputFormat = OutputFormat.HUMAN,
+        source: IndirectIO = sys.stdin,
+    ):
         """initialize a console environment
 
-        @param output: output file (e.g. sys.stdin) or callable returning such a file
+        @param output: output file (e.g. sys.stdout) or callable returning such a file
         @param prompt: the prompt string to be output in front of every line (with "echo" enabled)
         @param output_format: the initial output format to be used by the interface
         """
         self._given_output = output
+        self._given_source = source
         self._prompt = prompt
         self._show_echo = True
         self.terminal = None  # type: blessings.Terminal
@@ -51,6 +61,33 @@ class Console:
             return self._given_output()
         else:
             return self._given_output
+
+    @property
+    def source(self) -> typing.TextIO:
+        """allows to define a callable as an "input" source"""
+        if callable(self._given_source):
+            return self._given_source()
+        else:
+            return self._given_source
+
+    def read_input_line(self) -> str:
+        """emit the prompt (if non-empty) to output and read one line of input from the source
+
+        May raise EOFError.
+        Return the received string without the trailing line separator.
+        """
+        prompt = self.get_prompt()
+        if prompt:
+            print(prompt, file=self.output, end="", flush=True)
+        source = self.source
+        if source == sys.stdin:
+            return input()
+        else:
+            # generic text IO
+            received = source.readline()
+            if received == "":
+                raise EOFError
+            return received.rstrip(self.linesep)
 
     def __enter__(self):
         """store the original settings of the terminal"""
@@ -96,7 +133,7 @@ class Console:
 
     def configure_auto(self, force_disable_style=False):
         """disable echo for non-interactive sessions"""
-        self.set_echo(sys.stdin.isatty())
+        self.set_echo(self.source.isatty())
         if self.output.isatty() and not force_disable_style:
             try:
                 self.terminal = blessings.Terminal(stream=self.output)
@@ -143,7 +180,7 @@ class Console:
         except BlockingIOError as exc:
             raise ShouldThrottleException() from exc
 
-    def get_prompt(self):
+    def get_prompt(self) -> str | None:
         if self._output_format == OutputFormat.HUMAN and self._show_echo:
             prompt = self._prompt() if callable(self._prompt) else self._prompt
         else:

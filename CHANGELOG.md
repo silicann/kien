@@ -1,5 +1,10 @@
 # kien release changelog
 
+## v0.17.0
+
+* FEATURE: Allow to *not* use STDIN for reading the input.
+
+
 ## v0.16.0
 
 * FEATURE: Loads of packaging improvements.

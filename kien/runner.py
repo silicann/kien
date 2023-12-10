@@ -220,12 +220,8 @@ class ConsoleRunner:
                     console.linefeed()
 
     def _process_line(self, console, commander, ignore_end_of_file) -> bool:
-        prompt = console.get_prompt()
         try:
-            if prompt:
-                line = input(prompt)
-            else:
-                line = input()
+            line = console.read_input_line()
         except EOFError:
             console.linefeed()
             if ignore_end_of_file:
