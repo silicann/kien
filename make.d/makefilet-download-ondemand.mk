@@ -4,7 +4,7 @@
 #   * on-demand download (temporarily stored in the local 'build/' directory)
 
 # alternative version: "master" (the tip of the current development branch)
-MAKEFILET_DOWNLOAD_VERSION ?= v0.10.0
+MAKEFILET_DOWNLOAD_VERSION ?= v0.14.3
 MAKEFILET_DOWNLOAD_URL ?= https://notabug.org/sumpfralle/makefilet/archive/$(MAKEFILET_DOWNLOAD_VERSION).tar.gz
 
 # first attempt: system-wide installation (e.g. deb package) or submodule of this project?
