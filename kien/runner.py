@@ -56,14 +56,11 @@ def initialize_pid_file(path):
 
 
 class ConsoleRunner:
-    def __init__(self) -> None:
+    def __init__(self, prompt: str = "# ") -> None:
         self.cli_args = None
         self.console = None
         self.commander = None
-
-    @property
-    def prompt(self):
-        return "# "
+        self.prompt = prompt
 
     def get_arg_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser()
