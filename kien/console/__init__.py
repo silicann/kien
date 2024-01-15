@@ -78,7 +78,8 @@ class Console:
         """
         prompt = self.get_prompt()
         if prompt:
-            print(prompt, file=self.output, end="", flush=True)
+            self.output.write(prompt)
+            self.output.flush()
         source = self.source
         if source == sys.stdin:
             return input()
@@ -144,7 +145,8 @@ class Console:
 
     def linefeed(self):
         if self._output_format is OutputFormat.HUMAN:
-            print(file=self.output, end=self.linesep, flush=True)
+            self.output.write(self.linesep)
+            self.output.flush()
 
     def _format_output(self, s):
         if self.terminal and self.terminal.number_of_colors:
@@ -175,7 +177,8 @@ class Console:
         end = ("\x20" if result.success else "\x07") + "\0"
 
         try:
-            print(content, file=self.output, end=end, flush=True)
+            self.output.write(content + end)
+            self.output.flush()
             self.linefeed()
         except BlockingIOError as exc:
             raise ShouldThrottleException() from exc
