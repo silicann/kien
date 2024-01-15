@@ -1,11 +1,12 @@
 import argparse
 import atexit
+import functools
 import logging
 import os
 import pathlib
 import readline
 import sys
-from typing import Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 import blinker
 
@@ -56,9 +57,14 @@ def initialize_pid_file(path):
 
 
 class ConsoleRunner:
-    def __init__(self, prompt: str = "# ") -> None:
+    def __init__(
+        self,
+        prompt: str = "# ",
+        console_factory: Optional[Callable[[], Console]] = None,
+    ) -> None:
         self.cli_args = None
         self.console = None
+        self._console_factory = console_factory
         self.commander = None
         self.prompt = prompt
 
@@ -167,10 +173,15 @@ class ConsoleRunner:
 
     def run(self) -> None:
         self.configure()
+        if self._console_factory is None:
+            console_factory = functools.partial(
+                Console, lambda: sys.stdout, prompt=self.prompt
+            )
+        else:
+            console_factory = self._console_factory
 
         assert isinstance(self.cli_args, argparse.Namespace)
-
-        with Console(lambda: sys.stdout, prompt=self.prompt) as console:
+        with console_factory() as console:
             console.configure_auto(force_disable_style=self.cli_args.disable_style)
             if self.commander is None:
                 raise RuntimeError("You must configure a commander before starting run")
