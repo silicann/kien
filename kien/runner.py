@@ -185,7 +185,7 @@ class ConsoleRunner:
                 log_filename_by_process=self.cli_args.log_filename_by_process,
             )
 
-    def run(self) -> None:
+    def run(self, should_stop: Optional[Callable[[], bool]] = None) -> None:
         self._is_running = False
         self.configure()
         if self._console_factory is None:
@@ -224,6 +224,8 @@ class ConsoleRunner:
             # start the application loop
             while True:
                 self._is_running = True
+                if (should_stop is not None) and should_stop():
+                    break
 
                 @failsafe(enable=self.cli_args.failsafe, callback=handle_unhandled_exception)
                 def _process_line():
