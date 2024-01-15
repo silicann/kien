@@ -28,7 +28,7 @@ def get_interface_handler(specification, logger):
     if specification is None:
         return LocalInterface(logger)
     parsed = urllib.parse.urlparse(specification)
-    kwargs = dict(urllib.parse.parse_qsl(parsed.query))  # type: Mapping[str, Any]
+    kwargs: Mapping[str, Any] = dict(urllib.parse.parse_qsl(parsed.query))
     if parsed.scheme == "tty":
         parser_map = {"reconnect_on_hangup": bool, "baudrate": int}
         handler = TTYInterface
