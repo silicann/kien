@@ -3,6 +3,7 @@
 ## v0.17.0
 
 * FEATURE: Allow to *not* use STDIN for reading the input.
+* FEATURE: Add minimal test environment for unittests of applications using kien.
 
 
 ## v0.16.0
