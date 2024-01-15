@@ -11,6 +11,7 @@ import termios
 import tty
 import typing
 # fmt: on
+from io import UnsupportedOperation
 
 import blessings
 
@@ -94,7 +95,7 @@ class Console:
         """store the original settings of the terminal"""
         try:
             self._original_console_attributes = termios.tcgetattr(self.output)
-        except termios.error:
+        except (termios.error, UnsupportedOperation):
             # it may fail for piped output
             self._original_console_attributes = None
         # Increase window size as seen from the kernel to its maximum value.
@@ -105,7 +106,10 @@ class Console:
         # to the user). At the point of this change this did not seem to cause any problems
         # with the clients on the other end, as they simply wrap the canonical editor line into the
         # next line which is, in contrast to the inserted carriage return, exactly what we want.
-        fcntl.ioctl(self.output, termios.TIOCSWINSZ, TERMINAL_SIZE_MAX)
+        try:
+            fcntl.ioctl(self.output, termios.TIOCSWINSZ, TERMINAL_SIZE_MAX)
+        except (OSError, UnsupportedOperation):
+            pass
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -127,8 +131,11 @@ class Console:
             else:
                 attributes[tty.LFLAG] &= ~termios.ECHO
             tcsetattr_flags = termios.TCSAFLUSH
-            if hasattr(termios, "TCSASOFT"):
+            try:
                 tcsetattr_flags |= termios.TCSASOFT  # type: ignore
+            except AttributeError:
+                # TCASOFT is not supported on all platforms
+                pass
             termios.tcsetattr(self.output, tcsetattr_flags, attributes)
         self._show_echo = enabled
 
