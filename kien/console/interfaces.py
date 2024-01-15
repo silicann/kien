@@ -118,7 +118,9 @@ class TTYInterface(BaseInterface):
             import serial
 
             try:
-                self.baudrate_tcattr_value = serial.Serial.BAUDRATE_CONSTANTS[self.baudrate]
+                self.baudrate_tcattr_value = serial.Serial.BAUDRATE_CONSTANTS[
+                    self.baudrate
+                ]
             except KeyError:
                 InvalidInterfaceSpecificationError(
                     "Non-standard baudrates are not supported: {}".format(self.baudrate)
@@ -163,7 +165,9 @@ class TTYInterface(BaseInterface):
         """
         # TODO: the flags are just copied from agetty's behaviour
         self.logger.debug("Opening target terminal: %s", self.path)
-        dev = os.open(self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE)
+        dev = os.open(
+            self.path, os.O_RDWR | os.O_NOCTTY | os.O_NONBLOCK | os.O_LARGEFILE
+        )
         self.logger.debug("Closing stdin and stdout")
         for handle in (sys.stdin, sys.stdout):
             try:
@@ -232,7 +236,9 @@ class InterfaceManager:
         }:
             # The signal handler signal.SIG_IGN is not appropriate: it would prevent "sigwaitinfo"
             # below from capturing these signals.
-            original_signal_handlers[one_signal] = signal.signal(one_signal, lambda *args: None)
+            original_signal_handlers[one_signal] = signal.signal(
+                one_signal, lambda *args: None
+            )
         should_finish = False
         while not should_finish:
             try:
@@ -306,7 +312,9 @@ class InterfaceManager:
                 )
         # parse the specifications first (reduced risk of leaving a broken mess)
         if new_wanted_interfaces:
-            self.logger.info("Starting processes for new interfaces: %s", new_wanted_interfaces)
+            self.logger.info(
+                "Starting processes for new interfaces: %s", new_wanted_interfaces
+            )
         interface_handlers = {}
         for new_spec in new_wanted_interfaces:
             try:
@@ -338,7 +346,9 @@ class InterfaceManager:
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
                 # our logging handler also influences the logging handler of the interface
                 self.reconfigure_logging()
-                self.logger.info("Spawned process %d for interface: %s", os.getpid(), handler)
+                self.logger.info(
+                    "Spawned process %d for interface: %s", os.getpid(), handler
+                )
                 # there is nothing more to be prepared by us - the logic handler may take over
                 return False
             else:

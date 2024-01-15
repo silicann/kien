@@ -16,7 +16,9 @@ from ..error import CommandError
 from ..transformation import flatten, unique
 from ..utils import join_generator_string, strip_tags, TaggedString
 
-command = create_commander("help", description="List and describe all available commands.")
+command = create_commander(
+    "help", description="List and describe all available commands."
+)
 
 
 def _indent_no_first():
@@ -67,7 +69,9 @@ def _render_description(cmd, text_width, long_prefix="  - "):
         token_indent = _indent + " " * len(token_name)
 
         if token.description:
-            description = os.linesep.join(wrap(token.description, text_width - len(token_indent)))
+            description = os.linesep.join(
+                wrap(token.description, text_width - len(token_indent))
+            )
             token_description = indent(description, token_indent, _indent_no_first())
             token_doc += token_description
         if token.choices:
@@ -101,7 +105,9 @@ def describe_command_list(commands: dict):
 def describe_command(all_commands, root, output_width=80):
     yield TaggedString.header("%s command" % str(root))
     if root.__commander__.__doc__:
-        yield TaggedString.help(_wrap_indent(root.__commander__.__doc__, "", output_width))
+        yield TaggedString.help(
+            _wrap_indent(root.__commander__.__doc__, "", output_width)
+        )
     yield ""
     yield TaggedString.label("Supported Subcommands")
     public_commands = filter_public_commands(all_commands)
@@ -116,7 +122,9 @@ def describe_command(all_commands, root, output_width=80):
         if group is not None:
             yield "\t%s" % TaggedString.label(group.name)
             if group.description:
-                yield TaggedString.help(indent(os.linesep.join(wrap(group.description)), "\t  "))
+                yield TaggedString.help(
+                    indent(os.linesep.join(wrap(group.description)), "\t  ")
+                )
         for cmd in group_commands:
             cmd_str = str(cmd)
             doc = _render_description(cmd, output_width)

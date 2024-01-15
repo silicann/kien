@@ -16,7 +16,9 @@ def transform(**fields):
             transformed_kwargs = {}
             for field, transformator in fields.items():
                 try:
-                    transformed_kwargs[field] = transform_value(transformator, kwargs.pop(field))
+                    transformed_kwargs[field] = transform_value(
+                        transformator, kwargs.pop(field)
+                    )
                 except KeyError:
                     transformed_kwargs[field] = None
             return func(*args, **transformed_kwargs, **kwargs)
@@ -33,7 +35,9 @@ T_Transformable = Union[
 ]
 
 
-def transform_value(transformator: Union[T_Transformable, Iterable[T_Transformable]], value):
+def transform_value(
+    transformator: Union[T_Transformable, Iterable[T_Transformable]], value
+):
     if isinstance(transformator, Iterable):
         transformators = transformator
     else:

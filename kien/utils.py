@@ -104,7 +104,9 @@ def columns(separator="\t", join_char=None):
         @join_generator_string(formatter=str.rstrip)
         @wraps(func)
         def wrapper(*args, **kwargs):
-            rows = [line.split(separator) for line in func(*args, *kwargs).split(os.linesep)]
+            rows = [
+                line.split(separator) for line in func(*args, *kwargs).split(os.linesep)
+            ]
             column_widths = calculate_column_widths(rows)
             for row in rows:
                 yield join_char.join(fit_row(row, column_widths))

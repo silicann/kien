@@ -107,7 +107,9 @@ class ConsoleRunner:
             action="append",
             help="Bind to the given interface(s) and use these for input and output",
         )
-        parser.add_argument("--pid-file", default=None, type=str, help="write process pid to file")
+        parser.add_argument(
+            "--pid-file", default=None, type=str, help="write process pid to file"
+        )
         parser.add_argument(
             "--log-level",
             dest="log_level",
@@ -218,7 +220,9 @@ class ConsoleRunner:
 
             def handle_unhandled_exception(exc, *args):
                 if self.cli_args.failsafe_errors:  # type: ignore
-                    logger.error("unhandled exception", exc_info=exc, extra=dict(callargs=args))
+                    logger.error(
+                        "unhandled exception", exc_info=exc, extra=dict(callargs=args)
+                    )
                 return True
 
             # start the application loop
@@ -227,7 +231,9 @@ class ConsoleRunner:
                 if (should_stop is not None) and should_stop():
                     break
 
-                @failsafe(enable=self.cli_args.failsafe, callback=handle_unhandled_exception)
+                @failsafe(
+                    enable=self.cli_args.failsafe, callback=handle_unhandled_exception
+                )
                 def _process_line():
                     return self._process_line(
                         console,
