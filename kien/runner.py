@@ -15,7 +15,7 @@ from .console import Console
 from .console.interfaces import InterfaceManager
 from .error import CommandError, ShouldThrottleException
 from .events import ConsoleExitEvent, StopProcessingEvent
-from .utils import autoload, CommandExecutionContext, failsafe, FragileStreamHandler
+from .utils import CommandExecutionContext, FragileStreamHandler, autoload, failsafe
 
 logger = logging.getLogger("eliza-runner")
 

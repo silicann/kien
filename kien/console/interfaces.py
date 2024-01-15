@@ -3,9 +3,8 @@ import os
 import signal
 import sys
 import termios
-from typing import Any, Mapping
 import urllib.parse
-
+from typing import Any, Mapping
 
 from ..utils import FragileStreamHandler
 

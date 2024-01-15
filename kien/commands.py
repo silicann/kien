@@ -20,13 +20,13 @@ from blinker import signal
 from .error import CommandError, InjectionError
 from .transformation import BuildTimeTransformContext, transform, transform_value
 from .utils import (
+    TaggedString,
+    TokenMismatch,
     join_generator_string,
     noop,
-    TaggedString,
     tokenize_args,
-    TokenMismatch,
 )
-from .validation import one_of, validate, validate_value, ValidationError
+from .validation import ValidationError, one_of, validate, validate_value
 
 
 class _Undefined:

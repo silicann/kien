@@ -1,8 +1,8 @@
+import os
+import re
 from collections import OrderedDict
 from itertools import groupby
 from operator import itemgetter
-import os
-import re
 from textwrap import indent, wrap
 
 from ..commands import (
@@ -14,7 +14,7 @@ from ..commands import (
 )
 from ..error import CommandError
 from ..transformation import flatten, unique
-from ..utils import join_generator_string, strip_tags, TaggedString
+from ..utils import TaggedString, join_generator_string, strip_tags
 
 command = create_commander(
     "help", description="List and describe all available commands."

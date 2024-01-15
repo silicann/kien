@@ -1,5 +1,5 @@
-from functools import update_wrapper, wraps
 import re
+from functools import update_wrapper, wraps
 from typing import Any, Callable
 
 

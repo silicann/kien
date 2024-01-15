@@ -1,7 +1,17 @@
-from functools import update_wrapper, wraps
 import itertools
 import re
-from typing import Any, Callable, Hashable, Iterable, Mapping, Optional, Pattern, Sequence, Union
+from functools import update_wrapper, wraps
+from typing import (
+    Any,
+    Callable,
+    Hashable,
+    Iterable,
+    Mapping,
+    Optional,
+    Pattern,
+    Sequence,
+    Union,
+)
 
 from .validation import one_of, validate_value
 

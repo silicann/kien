@@ -2,6 +2,7 @@
 import curses
 import fcntl
 import json
+
 # merely importing readline enable command history via "input"
 # noinspection PyUnresolvedReferences
 import readline  # noqa: F401
@@ -10,6 +11,7 @@ import sys
 import termios
 import tty
 import typing
+
 # fmt: on
 from io import UnsupportedOperation
 

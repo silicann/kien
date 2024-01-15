@@ -1,6 +1,4 @@
-from collections import namedtuple, UserString
 import contextlib
-from functools import wraps
 import importlib
 import inspect
 import logging
@@ -9,13 +7,14 @@ import os
 import re
 import shlex
 import time
+from collections import UserString, namedtuple
+from functools import wraps
 from typing import Callable, Iterable, Optional, Sequence, Type, Union
 
 import blessings
 
 from .error import ShouldThrottleException
 from .events import StopProcessingEvent
-
 
 PATH_ATTRIBUTE = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)$")
 PATH_DICT = re.compile(r"^(?P<attr>[a-zA-Z_][a-zA-Z_0-9]*)\[[\"\'](?P<key>.+)[\"\']\]$")
