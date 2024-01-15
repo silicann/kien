@@ -71,14 +71,14 @@ def get_interface_handler(specification, logger):
 
 
 class InvalidInterfaceSpecificationError(Exception):
-    """Indicate an invalid terminal specification (e.g. unknown scheme or missing arguments)"""
+    """invalid terminal specification (e.g. unknown scheme or missing arguments)"""
 
 
 class BaseInterface:
     """interface implementations are supposed to reconfigured sys.stdin and sys.stdout
 
-    The details of the interfaces should be hidden well, in order to allow its users to keep using
-    the builtins "input()" and "print()".
+    The details of the interfaces should be hidden well, in order to allow its users to
+    keep using the builtins "input()" and "print()".
     """
 
     def __init__(self, logger):
@@ -112,8 +112,8 @@ class TTYInterface(BaseInterface):
         self.is_initialized = False
         self.reconnect_on_hangup = reconnect_on_hangup
         if self.baudrate is not None:
-            # Try to import the module early: errors in "connect" are much harder to debug, since
-            # they are running in a separate process without stderr.
+            # Try to import the module early: errors in "connect" are much harder to
+            # debug, since they are running in a separate process without stderr.
             import serial
 
             try:
@@ -131,7 +131,7 @@ class TTYInterface(BaseInterface):
             self.connect()
 
         if not self.is_initialized:
-            # execute all preparations (e.g. forking) for acquiring our terminal later on
+            # execute all preparations (e.g. forking) for acquiring our terminal later
             self._become_session_leader()
             if self.reconnect_on_hangup:
                 # survive a SIGHUP signal, if requested (useful for USB interfaces)
@@ -158,9 +158,9 @@ class TTYInterface(BaseInterface):
                 os.setsid()
 
     def _acquire_controlling_terminal(self):
-        """fork the process in order to become session leader and replace stdin/stdout/stderr
+        """fork the process, become session leader and replace stdin/stdout/stderr
 
-        The result should be comparable with running the program via "setsid -w agetty ...".
+        The result should be comparable with running the program via "setsid -w agetty".
         """
         # TODO: the flags are just copied from agetty's behaviour
         self.logger.debug("Opening target terminal: %s", self.path)
@@ -173,8 +173,8 @@ class TTYInterface(BaseInterface):
                 handle.close()
             except OSError:
                 # For unknown reasons this seems to happen for stdout from time to time.
-                # How to reproduce: disconnect the USB peer in a USB gadget setup for a short very
-                # period.
+                # How to reproduce: disconnect the USB peer in a USB gadget setup for a
+                # short very period.
                 self.logger.info("Failed to close handle: %s", handle)
         self.logger.debug("Disabling controlling terminal")
         fcntl.ioctl(dev, termios.TIOCSCTTY, 0)
@@ -216,7 +216,8 @@ class InterfaceManager:
     def run(self, wanted_interfaces, log_filename_by_process=None):
         """fork processes for each wanted interface
 
-        This function returns for the child processes (i.e.: they may continue using stdin/stdout).
+        This function returns for the child processes (i.e.: they may continue using
+        stdin/stdout).
         The parent process (the interface manager) stays alive and never returns.
         """
         if not self.run_and_stop_interfaces(
@@ -225,7 +226,8 @@ class InterfaceManager:
             # we are a managed interface process - simply return
             return
         # we are the manager
-        # Ignore all signals that we want to listen for, but store their previous handlers.
+        # Ignore all signals that we want to listen for, but store their previous
+        # handlers.
         original_signal_handlers = {}
         for one_signal in {
             signal.SIGUSR1,
@@ -233,8 +235,8 @@ class InterfaceManager:
             signal.SIGTERM,
             signal.SIGCHLD,
         }:
-            # The signal handler signal.SIG_IGN is not appropriate: it would prevent "sigwaitinfo"
-            # below from capturing these signals.
+            # The signal handler signal.SIG_IGN is not appropriate: it would prevent
+            # "sigwaitinfo" below from capturing these signals.
             original_signal_handlers[one_signal] = signal.signal(
                 one_signal, lambda *args: None
             )
@@ -263,7 +265,8 @@ class InterfaceManager:
                         spec,
                     )
                     self.running_interface_processes.pop(spec)
-                    # in any case: retrieve its result (otherwise it will end up as a zombie)
+                    # In any case: retrieve its result.
+                    # Otherwise it will end up as a zombie.
                     os.waitpid(signal_info.si_pid, os.WNOHANG)
                 if not self.running_interface_processes:
                     self.logger.info("All child processes are gone. Going home, too.")
@@ -273,8 +276,8 @@ class InterfaceManager:
                 for spec, pid in self.running_interface_processes.items():
                     print("{:d}\t{}".format(pid, spec))
             elif signal_info.si_signo == signal.SIGHUP:
-                # Parse the wanted set of interfaces from a given text file and update the list of
-                # running processes appropriately.
+                # Parse the wanted set of interfaces from a given text file and update
+                # the list of running processes appropriately.
                 raise NotImplementedError(
                     "The 'update interfaces from file' feature is not supported, yet."
                 )
@@ -288,8 +291,9 @@ class InterfaceManager:
         """kill old processes or start new ones
 
         @param wanted_interfaces: list of text-based interface specifications
-        @param log_filename_by_process: filename template (including "%d" for the PID) to be used
-            as a location for storing log message of all child processes. Disabled if undefined.
+        @param log_filename_by_process: filename template (including "%d" for the PID)
+            to be used as a location for storing log message of all child processes.
+            Disabled if undefined.
         """
         running_set = set(self.running_interface_processes)
         obsolete_interfaces = running_set.difference(wanted_interfaces)
@@ -343,12 +347,14 @@ class InterfaceManager:
                 if log_filename_by_process:
                     sys.stderr.close()
                     sys.stderr = open(log_filename_by_process % os.getpid(), "wt")
-                # our logging handler also influences the logging handler of the interface
+                # Our logging handler also influences the logging handler of the
+                # interface.
                 self.reconfigure_logging()
                 self.logger.info(
                     "Spawned process %d for interface: %s", os.getpid(), handler
                 )
-                # there is nothing more to be prepared by us - the logic handler may take over
+                # There is nothing more to be prepared by us - the logic handler may
+                # take over.
                 return False
             else:
                 # we are the parent
@@ -357,7 +363,7 @@ class InterfaceManager:
         return True
 
     def reconfigure_logging(self):
-        """remove all existing log handlers and add a stream handler to stderr (if open)"""
+        """remove all existing log handlers and attach a stream handler to stderr"""
         self.logger.debug("Reconfiguring logging")
         for handler in self.logger.handlers:
             self.logger.removeHandler(handler)

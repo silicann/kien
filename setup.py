@@ -18,7 +18,9 @@ except FileNotFoundError:
 setup(
     name="kien",
     version=__version__,
-    description="kien is a line-based command parser for creating shell-like interfaces",
+    description=(
+        "kien is a line-based command parser for creating shell-like interfaces"
+    ),
     long_description=long_description,
     long_description_content_type="text/markdown",
     author="Konrad Mohrfeldt",

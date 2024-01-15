@@ -307,7 +307,10 @@ class _CommandMatches:
                                 message=str(mismatch.exception),
                             )
                     else:
-                        yield "You have not provided sufficient arguments for this command."
+                        yield (
+                            "You have not provided sufficient arguments for this"
+                            " command."
+                        )
                         yield "Usage:\n\t" + match.command.get_label()
             else:
                 yield 'Could not find the command for "%s"' % " ".join(args)
@@ -410,7 +413,7 @@ class _Command:
         # we made sure that the provided args match the defined tokens
         # but we may have more tokens. if one of the left over tokens
         # is not optional this command is a partial match
-        for token in tokens[len(args):]:
+        for token in tokens[len(args) :]:
             if not token.is_optional:
                 return _PartialCommandMatch(self, token, invalid_tokens)
 
@@ -536,9 +539,10 @@ class _Injection:
             default = self._get_default(func)
             if default is _Undefined:
                 raise InjectionError(
-                    'Dependency "{source}" injected as "{name}" was not provided at runtime. '
-                    'Did you forget to call `command.provide("{source}", foo)` '
-                    "at some point or to set a default value?".format(
+                    'Dependency "{source}" injected as "{name}" was not provided at'
+                    " runtime."
+                    ' Did you forget to call `command.provide("{source}", foo)`'
+                    " at some point or to set a default value?".format(
                         name=self.inject_as, source=self.key
                     )
                 ) from exc

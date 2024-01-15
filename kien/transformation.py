@@ -57,7 +57,9 @@ def transform_value(
         if getattr(transformator, "__is_transformator", False):
             # syntactic sugar for uses of uninstantiated transformers
             transformator = transformator()  # type: ignore
-        value = getattr(transformator, "transform", transformator)(value)  # type: ignore
+        value = getattr(transformator, "transform", transformator)(
+            value
+        )  # type: ignore
 
     return value
 

@@ -21,7 +21,8 @@ from ..command.set import OutputFormat
 from ..error import ShouldThrottleException
 from ..utils import render_tags, strip_tags
 
-# The size of unsigned short is platform-dependent, but guaranteed to be at least 2 bytes.
+# The size of unsigned short is platform-dependent, but guaranteed to be at least two
+# bytes.
 # As struct.pack seems to enforce portability across architectures, we use a value
 # that is always going to fit in that.
 UNSIGNED_SHORT_MAX = 65535
@@ -41,7 +42,8 @@ class Console:
         """initialize a console environment
 
         @param output: output file (e.g. sys.stdout) or callable returning such a file
-        @param prompt: the prompt string to be output in front of every line (with "echo" enabled)
+        @param prompt: the prompt string to be output in front of every line
+            (with "echo" enabled)
         @param output_format: the initial output format to be used by the interface
         """
         self._given_output = output
@@ -57,8 +59,8 @@ class Console:
     def output(self):
         """allow the use of a callable as an "output" source
 
-        This ability is relevant for files, that may be replaced during runtime (e.g. disconnected
-        USB gadget host).
+        This ability is relevant for files, that may be replaced during runtime
+        (e.g. disconnected USB gadget host).
         """
         if callable(self._given_output):
             return self._given_output()
@@ -74,7 +76,7 @@ class Console:
             return self._given_source
 
     def read_input_line(self) -> str:
-        """emit the prompt (if non-empty) to output and read one line of input from the source
+        """emit the prompt (if non-empty) to output and read one input line from source
 
         May raise EOFError.
         Return the received string without the trailing line separator.
@@ -102,12 +104,14 @@ class Console:
             self._original_console_attributes = None
         # Increase window size as seen from the kernel to its maximum value.
         # This will prevent the canonical line editor from inserting a \r character
-        # (carriage return) after it reached the window with, causing the line not to wrap, but
-        # to overwrite any input that already has been provided (technically it’s not overwritten,
-        # as the input buffer will still append new data, but that is not entirely transparent
-        # to the user). At the point of this change this did not seem to cause any problems
-        # with the clients on the other end, as they simply wrap the canonical editor line into the
-        # next line which is, in contrast to the inserted carriage return, exactly what we want.
+        # (carriage return) after it reached the window with, causing the line not to
+        # wrap, but to overwrite any input that already has been provided (technically
+        # it is not overwritten, as the input buffer will still append new data, but
+        # that is not entirely transparent to the user).
+        # At the point of this change this did not seem to cause any problems with the
+        # clients on the other end, as they simply wrap the canonical editor line into
+        # the next line which is, in contrast to the inserted carriage return, exactly
+        # what we want.
         try:
             fcntl.ioctl(self.output, termios.TIOCSWINSZ, TERMINAL_SIZE_MAX)
         except (OSError, UnsupportedOperation):

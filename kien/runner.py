@@ -32,13 +32,13 @@ LOG_LEVELS = {
 
 
 def initialize_pid_file(path):
-    """create a PID file and take care, that it is safely removed when the program exits"""
+    """create a PID file and ensure that it is safely removed when the program exits"""
 
     def cleanup_pid_file():
         """remove the PID file, if it contains the current process ID
 
-        This prevents our child processes (which inherit our exit caller via "atexit") from
-        removing the parent's PID file.
+        This prevents our child processes (which inherit our exit caller via "atexit")
+        from removing the parent's PID file.
         """
         try:
             with open(path, "r") as pid_file:
@@ -136,7 +136,10 @@ class ConsoleRunner:
         parser.add_argument(
             "--failsafe",
             action="store_true",
-            help="keep the application running no matter what runtime exceptions are thrown",
+            help=(
+                "keep the application running no matter what runtime exceptions are"
+                " thrown"
+            ),
         )
         parser.add_argument(
             "--failsafe-errors",
@@ -272,10 +275,11 @@ class ConsoleRunner:
                 with commander.provide(CommandExecutionContext, context) and context:
                     on_dispatch.send(self, line=line)
                     for result in commander.dispatch(line):
-                        # As CommandExecutionContext is a reentrant context manager we can
-                        # use it multiple times. In this case we want to give the
-                        # dispatched callback control over the dispatch mechanism as well
-                        # as console write operations
+                        # As CommandExecutionContext is a reentrant context manager we
+                        # can use it multiple times.
+                        # In this case we want to give the dispatched callback control
+                        # over the dispatch mechanism as well as console write
+                        # operations.
                         with context:
                             on_result.send(self, result=result)
                             console.send_data(result)
