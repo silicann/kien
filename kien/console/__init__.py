@@ -87,7 +87,7 @@ class Console:
         else:
             # generic text IO
             received = source.readline()
-            if received == "":
+            if not received:
                 raise EOFError
             return received.rstrip(self.linesep)
 
