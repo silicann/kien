@@ -6,6 +6,7 @@ import os
 import pathlib
 import readline
 import sys
+import time
 from typing import Callable, Optional, Sequence
 
 import blinker
@@ -67,6 +68,19 @@ class ConsoleRunner:
         self._console_factory = console_factory
         self.commander = None
         self.prompt = prompt
+        self._is_running = False
+
+    def wait_for_readiness(self, timeout: float = 1) -> None:
+        """wait until messages can be injected into the processor
+
+        Raises TimeoutError in case of failures
+        """
+        wait_time = min(0.1, timeout / 10)
+        wait_until = time.monotonic() + timeout
+        while not self._is_running:
+            if time.monotonic() >= wait_until:
+                raise TimeoutError("Kien failed to get ready within the expected time")
+            time.sleep(wait_time)
 
     def get_arg_parser(self) -> argparse.ArgumentParser:
         parser = argparse.ArgumentParser()
@@ -172,6 +186,7 @@ class ConsoleRunner:
             )
 
     def run(self) -> None:
+        self._is_running = False
         self.configure()
         if self._console_factory is None:
             console_factory = functools.partial(
@@ -208,6 +223,7 @@ class ConsoleRunner:
 
             # start the application loop
             while True:
+                self._is_running = True
 
                 @failsafe(enable=self.cli_args.failsafe, callback=handle_unhandled_exception)
                 def _process_line():

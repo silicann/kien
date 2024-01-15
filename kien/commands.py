@@ -402,7 +402,7 @@ class _Command:
         # we made sure that the provided args match the defined tokens
         # but we may have more tokens. if one of the left over tokens
         # is not optional this command is a partial match
-        for token in tokens[len(args) :]:
+        for token in tokens[len(args):]:
             if not token.is_optional:
                 return _PartialCommandMatch(self, token, invalid_tokens)
 
